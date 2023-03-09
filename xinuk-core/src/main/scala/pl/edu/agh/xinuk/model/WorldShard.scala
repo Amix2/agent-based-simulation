@@ -28,8 +28,8 @@ trait WorldShard {
   def cellToWorker: Map[CellId, WorkerId]
 
   def calculateSignalUpdates(iteration: Long, signalPropagation: SignalPropagation)(implicit config: XinukConfig): Map[CellId, SignalMap] = {
-    cells.keys.map { cellId =>
-      (cellId, signalPropagation.calculateUpdate(iteration, toNeighbourhoodState(cellId)))
+    cells.map { cellId_Cell =>
+      (cellId_Cell._1, signalPropagation.calculateUpdate(iteration, toNeighbourhoodState(cellId_Cell._1), cellId_Cell._2))
     }
   }.toMap
 

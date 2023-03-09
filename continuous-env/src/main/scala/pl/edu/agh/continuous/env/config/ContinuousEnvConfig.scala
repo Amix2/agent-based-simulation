@@ -8,6 +8,7 @@ final case class ContinuousEnvConfig(
                                 worldWidth: Int,
                                 worldHeight: Int,
                                 iterationsNumber: Long,
+                                deltaTime: Double,
 
                                 signalSuppressionFactor: Double,
                                 signalAttenuationFactor: Double,
@@ -25,8 +26,6 @@ final case class ContinuousEnvConfig(
 
                                 cellSize: Int,
 
-                                signalSpawnChance: Double,
-                                beingSpawnChance: Double,
 
                                 initialSignal: Signal,
 

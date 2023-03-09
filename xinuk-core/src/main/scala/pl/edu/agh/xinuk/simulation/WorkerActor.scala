@@ -100,7 +100,7 @@ class WorkerActor[ConfigType <: XinukConfig](
         val signalUpdates: Map[CellId, SignalMap] = flatGroup(signalUpdatesStash(currentIteration))(_._1).map {
           case (id, groups) => (id, groups.map(_._2).reduce(_ + _))
         }
-        applySignalUpdates(signalUpdates)
+        applySignalUpdates(signalUpdates, iteration)
         signalUpdatesStash.remove(currentIteration)
 
         distributeRemoteCellContents(currentIteration)
@@ -156,6 +156,8 @@ class WorkerActor[ConfigType <: XinukConfig](
   }
 
   private def applyUpdate(stateUpdate: TargetedStateUpdate): Unit = {
+    Thread.sleep(10)
+
     val target = worldShard.cells(stateUpdate.target)
     val action = stateUpdate.update
     val (result, metrics) = planResolver.applyUpdate(target.state.contents, action)
@@ -167,13 +169,13 @@ class WorkerActor[ConfigType <: XinukConfig](
     worldShard.calculateSignalUpdates(currentIteration, signalPropagation)
   }
 
-  private def applySignalUpdates(signalUpdates: Map[CellId, SignalMap]): Unit = {
+  private def applySignalUpdates(signalUpdates: Map[CellId, SignalMap], iteration: Long): Unit = {
     signalUpdates.foreach {
-      case (cellId, signalUpdate) =>
+      case (cellId, signalMapUpdate) =>
         val targetCell = worldShard.cells(cellId)
-        val oldSignal = targetCell.state.signalMap
-        val newSignal = (oldSignal + signalUpdate * config.signalSuppressionFactor) * config.signalAttenuationFactor
-        targetCell.updateSignal(newSignal * targetCell.state.contents.signalFactor(currentIteration))
+        val oldSignalMap = targetCell.state.signalMap
+        val newSignalMap = signalMapUpdate.applySignalUpdates(oldSignalMap, iteration)
+        targetCell.updateSignal(newSignalMap * targetCell.state.contents.signalFactor(currentIteration))
     }
   }
 
@@ -202,6 +204,14 @@ class WorkerActor[ConfigType <: XinukConfig](
   }
 
   private def distributeSignal(iteration: Long, signalToDistribute: Map[CellId, SignalMap]): Unit = {
+    signalToDistribute.foreach({case (id, signal) => {
+      signal.foreach({case (dir, signal: Signal) => {
+        if(signal.agentSignals.size > 0)
+          {
+            var t =0 ;
+          }
+      }})
+    }})
     val grouped = groupByWorker(signalToDistribute.toSeq) { case (id, _) => id }
     distribute(
       worldShard.outgoingWorkerNeighbours, grouped)(

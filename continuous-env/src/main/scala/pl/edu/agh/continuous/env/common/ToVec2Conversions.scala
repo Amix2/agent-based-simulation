@@ -1,9 +1,10 @@
 package pl.edu.agh.continuous.env.common
 
+import io.jvm.uuid.UUID
 import pl.edu.agh.continuous.env.common.geometry.Vec2
 import pl.edu.agh.xinuk.model.SignalMap.signalMap2Map
 import pl.edu.agh.xinuk.model.grid.GridDirection
-import pl.edu.agh.xinuk.model.{Direction, SignalMap}
+import pl.edu.agh.xinuk.model.{AgentSignal, Direction, Signal, SignalMap}
 
 import scala.language.implicitConversions
 
@@ -29,6 +30,18 @@ object ToVec2Conversions {
       case GridDirection.TopLeft => Vec2(-1, 1)*/
       case _ => throw new UnsupportedOperationException("Unknown direction")
     }
+
+    def isDiagonal: Boolean = direction match {
+      case GridDirection.Top => false
+      case GridDirection.TopRight => true
+      case GridDirection.Right => false
+      case GridDirection.BottomRight => true
+      case GridDirection.Bottom => false
+      case GridDirection.BottomLeft => true
+      case GridDirection.Left => false
+      case GridDirection.TopLeft => true
+      case _ => throw new UnsupportedOperationException("Unknown direction")
+    }
   }
 
   //  case GridDirection.Top => Vec2(0, 1)
@@ -45,6 +58,10 @@ object ToVec2Conversions {
       .map { case (direction, signal) => (direction.toVec2.normalized, signal) }
       .map { case (vec, signal) => vec * signal.value }
       .fold(Vec2.zero)((v1: Vec2, v2: Vec2) => v1 + v2)
+
+    def toAgentMessages: Map[UUID, AgentSignal] = signalMap2Map(signalMap)
+        .values
+        .foldLeft(Signal.zero)(_ + _).agentSignals
   }
 
 }

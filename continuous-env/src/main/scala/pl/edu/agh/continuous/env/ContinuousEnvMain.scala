@@ -2,6 +2,7 @@ package pl.edu.agh.continuous.env
 
 import com.typesafe.scalalogging.LazyLogging
 import pl.edu.agh.continuous.env.algorithm.{ContinuousEnvMetrics, ContinuousEnvWorldCreator, GeoKinMetrics, GeoKinPlanCreator, GeoKinPlanResolver}
+import pl.edu.agh.continuous.env.common.ToVec2Conversions.SignalMapConversionExtensions
 import pl.edu.agh.continuous.env.model.ContinuousEnvCell
 import pl.edu.agh.xinuk.Simulation
 import pl.edu.agh.xinuk.model.{CellState, Signal}
@@ -35,6 +36,26 @@ object ContinuousEnvMain extends LazyLogging {
   }
 
   private def cellToColorSign(cellState: CellState, continuousEnvCell: ContinuousEnvCell): Color = {
+    var x = continuousEnvCell.gridMultiCellId.x
+    var y = continuousEnvCell.gridMultiCellId.y
+//    var x = continuousEnvCell.BaseCoordinates.x
+//    var y = continuousEnvCell.BaseCoordinates.y
+    var si = 10.1;
+    //return new Color((x*si).toInt,(y*si).toInt,0)
+
+    var count = 0;
+    var maxVal = 0.0;
+
+    var messages = cellState.signalMap.toAgentMessages;
+    messages.foreach({ case (id, sig) => {
+      maxVal = math.max(maxVal, sig.distanceToLive);
+      count += 1;
+    }
+    })
+    var sum = 15;
+    var co = Math.min((count.intValue() % sum) * 255/sum, 255);
+    var co2 = Math.min(((count.intValue() +sum/2) % sum) * 255/sum, 255);
+    return new Color(0, co2,(co).toInt)
     if (continuousEnvCell.initialSignal.value > 0) {
       Color.BLUE
     } else if (continuousEnvCell.visited) {

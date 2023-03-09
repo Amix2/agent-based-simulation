@@ -8,9 +8,14 @@ import pl.edu.agh.xinuk.config.{Obstacle, XinukConfig}
 import pl.edu.agh.xinuk.model.continuous.{GridMultiCellId, Neighbourhood}
 import pl.edu.agh.xinuk.model.{CellContents, Signal}
 
-final case class ContinuousEnvCell(initialSignal: Signal)(implicit config: ContinuousEnvConfig) extends CellContents {
+final case class ContinuousEnvCell(initialSignal: Signal, gridMultiCellId: GridMultiCellId)(implicit config: ContinuousEnvConfig) extends CellContents {
   override def generateSignal(iteration: Long)(implicit config: XinukConfig): Signal =
-    initialSignal
+    { // runners can generate signal in cell they are standing on
+      var signals = (List(initialSignal) ++ runners.map(r => r.GenerateSignal(iteration * config.deltaTime, this)))
+        .foldLeft(Signal.zero)(_ + _);
+      signals
+    }
+
 
   override def signalFactor(iteration: Long)
                            (implicit config: XinukConfig): Double = {
@@ -23,6 +28,7 @@ final case class ContinuousEnvCell(initialSignal: Signal)(implicit config: Conti
     cellOutline.width * cellOutline.height
 
   private def totalRunnersField: Double = runners.map(_.mass).sum
+  def BaseCoordinates: Vec2 = Vec2(gridMultiCellId.y * cellOutline.width, gridMultiCellId.x * cellOutline.height);
 
   var cellOutline: CellOutline = CellOutline.default()
   var neighbourhood: Neighbourhood = Neighbourhood.empty()

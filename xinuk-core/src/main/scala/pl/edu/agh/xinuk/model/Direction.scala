@@ -6,4 +6,6 @@ trait Direction {
   def adjacent: Seq[Direction]
 
   def withAdjacent: Seq[Direction] = adjacent :+ this
+
+  def isDiagonal: Boolean
 }

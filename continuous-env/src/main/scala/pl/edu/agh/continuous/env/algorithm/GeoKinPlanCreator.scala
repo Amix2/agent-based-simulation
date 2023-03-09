@@ -41,9 +41,13 @@ final case class GeoKinPlanCreator() extends PlanCreator[ContinuousEnvConfig] {
           val allReachableRunners = getAllReachableRunners(continuousEnvCell, flattenedNeighboursMap, config)
           //reportDiagnostics(AllReachableRunnersDiagnostic(gridCellId, allReachableRunners, ro.runners))
           assertNoOverlaps(iteration, gridCellId, allReachableRunners)
-          if (iteration % 2 == 0) {
+
+          if (iteration % 2 == 0)
+          { // przesuwanie runnerów
             (moveRunnersFromCell(gridCellId, continuousEnvCell, flattenedNeighboursMap, neighbourhoodState, allReachableRunners, config),
               GeoKinMetrics.empty)
+            //(Plans.empty, GeoKinMetrics.empty)
+
           } else {
             (adjustVelocityInCell(continuousEnvCell, cellState.signalMap, flattenedNeighboursMap, allReachableRunners.toSet, config),
               GeoKinMetrics.empty)
@@ -86,13 +90,27 @@ final case class GeoKinPlanCreator() extends PlanCreator[ContinuousEnvConfig] {
     }
   }
 
+
   private def adjustVelocityInCell(cell: ContinuousEnvCell,
                                    signalMap: SignalMap,
                                    neighbourContents: Map[(ContinuousEnvCell, UUID), Direction],
                                    allReachableRunners: Set[Runner],
                                    config: ContinuousEnvConfig): Plans = {
+
     val runnersWithAdjustedVelocity = cell.runners.toSet
-      .map(runner => adjustVelocityForRunner(
+//      .map(runner => adjustVelocityForRunner(
+//        runner,
+//        signalMap,
+//        cell,
+//        neighbourContents,
+//        config))
+      .map(runner => adjustSocialForceForRunner(
+        runner,
+        signalMap,
+        cell,
+        neighbourContents,
+        config))
+      .map(runner => endStepRunnerUpdate(
         runner,
         signalMap,
         cell,
@@ -120,6 +138,52 @@ final case class GeoKinPlanCreator() extends PlanCreator[ContinuousEnvConfig] {
     new Plans(Map.empty, Seq(Plan(StateUpdate(RunnerOccupied(cell.generation + 1, runnersWithAdjustedVelocity)))))
   }
 
+  def adjustSocialForceForRunner(runner: Runner,
+                                 signalMap: SignalMap,
+                                 cell: ContinuousEnvCell,
+                                 neighbourContents: Map[(ContinuousEnvCell, UUID), Direction],
+                                 config: ContinuousEnvConfig): Runner = {
+
+    var agentGeomCenter = Vec2(0, 0);
+    var count = 0;
+    var messages = signalMap.toAgentMessages;
+    messages.foreach({ case (id, sig) => {
+      agentGeomCenter = agentGeomCenter + Vec2(sig.posX, sig.posY)
+      count += 1;
+    }})
+    //println(count)
+   // if(count == 0)
+    //  return runner;
+    //return runner;
+
+    agentGeomCenter = agentGeomCenter / count;
+    agentGeomCenter = Vec2(835.0,815.0);  // 635.0,515.0
+    var runnerGlobalPos = runner.positionInCell + cell.BaseCoordinates;
+    var dir = agentGeomCenter - runnerGlobalPos;
+    if(dir.lengthSq == 0)
+      return runner;
+    dir = dir.normalized
+
+    var swappedDir = Vec2(dir.y, dir.x);
+    var fixedDir = Vec2(dir.x, -dir.y);
+    var force = fixedDir*5.1;
+    //force = Vec2(0.0,0);
+    var out = runner.withAppliedForceConstrainedNoMin(
+      force,
+      config.personUnitAcceleration,
+      config.cellSize)
+    return out;
+  }
+
+  def endStepRunnerUpdate(runner: Runner,
+                                 signalMap: SignalMap,
+                                 cell: ContinuousEnvCell,
+                                 neighbourContents: Map[(ContinuousEnvCell, UUID), Direction],
+                                 config: ContinuousEnvConfig): Runner = {
+    return runner.withIncrementedGeneration();
+  }
+
+
   private def adjustVelocityForRunner(runner: Runner,
                                       signalMap: SignalMap,
                                       cell: ContinuousEnvCell,
@@ -128,14 +192,14 @@ final case class GeoKinPlanCreator() extends PlanCreator[ContinuousEnvConfig] {
     if (runner.path.isEmpty) {
       val force = signalMap.toVec2.normalized
       if (force.length != 0.0) {
-        val destinationLine = Line(runner.position, Vec2(runner.position.x + force.x * config.cellSize * 2.0,
-          runner.position.y + force.y * config.cellSize * 2.0))
+        val destinationLine = Line(runner.positionInCell, Vec2(runner.positionInCell.x + force.x * config.cellSize * 2.0,
+          runner.positionInCell.y + force.y * config.cellSize * 2.0))
         val destination = adjustDestination(destinationLine, cell, neighbourContents, config.cellSize)
         if (cell.graph.isEmpty) {
-          runner.path = List(runner.position, destination)
+          runner.path = List(runner.positionInCell, destination)
         }
         else {
-          runner.path = findPath(runner.position, destination, cell.graph, config.cellSize).toList
+          runner.path = findPath(runner.positionInCell, destination, cell.graph, config.cellSize).toList
         }
       }
     }
@@ -144,13 +208,13 @@ final case class GeoKinPlanCreator() extends PlanCreator[ContinuousEnvConfig] {
     if (runner.path.nonEmpty) {
       var target = Vec2.zero
       try {
-        target = findNextStep(runner.path, runner.position, cell, neighbourContents, config.cellSize)
+        target = findNextStep(runner.path, runner.positionInCell, cell, neighbourContents, config.cellSize)
       }
       catch {
-        case _: NoSuchElementException => runner.path = findPath(runner.position, runner.path.last, cell.graph, config.cellSize).toList
-          target = findNextStep(runner.path, runner.position, cell, neighbourContents, config.cellSize)
+        case _: NoSuchElementException => runner.path = findPath(runner.positionInCell, runner.path.last, cell.graph, config.cellSize).toList
+          target = findNextStep(runner.path, runner.positionInCell, cell, neighbourContents, config.cellSize)
       }
-      val movementVector = Line(runner.position, target)
+      val movementVector = Line(runner.positionInCell, target)
       if (movementVector.length <= runner.speed) {
         nextStep = Vec2(movementVector.end.x - movementVector.start.x, movementVector.end.y - movementVector.start.y)
       }
@@ -171,7 +235,7 @@ final case class GeoKinPlanCreator() extends PlanCreator[ContinuousEnvConfig] {
     //val adjustedRunnerForDiagonalMovement = adjustNextStepForDiagonalNeighbourhood(adjustedRunner, neighbourContents, cell, config.cellSize)
 
     reportPossibleFulfillmentDiagnostics(adjustedRunner, config.cellSize)
-    adjustedRunner
+    return adjustedRunner
   }
 
   private def adjustDestination(destinationLine: Line,
@@ -440,7 +504,7 @@ final case class GeoKinPlanCreator() extends PlanCreator[ContinuousEnvConfig] {
                                                      neighbourContents: Map[(ContinuousEnvCell, UUID), Direction],
                                                      cell: ContinuousEnvCell,
                                                      cellSize: Int): Runner = {
-    val runnerStep: Line = Line(runner.position, runner.position + runner.nextStep)
+    val runnerStep: Line = Line(runner.positionInCell, runner.positionInCell + runner.nextStep)
     val crossedLines = crossedNeighbourSegments(runnerStep, cell.cardinalSegments.keys)
       .map(crossedLine => crossedLine._1)
     if (crossedLines.isEmpty) {
@@ -460,8 +524,8 @@ final case class GeoKinPlanCreator() extends PlanCreator[ContinuousEnvConfig] {
     //the final destination wasn't a diagonal neighbour, it must've been a neighbour's neighbour, so the movement is invalid and must be limited
     if (invalidCrossingPoints.nonEmpty) {
       val crossingPoint = invalidCrossingPoints.head
-      val newNextStepLength = Line(runner.position, crossingPoint).length
-      val newNextStep = Vec2(crossingPoint.x - runner.position.x, crossingPoint.y - runner.position.y)
+      val newNextStepLength = Line(runner.positionInCell, crossingPoint).length
+      val newNextStep = Vec2(crossingPoint.x - runner.positionInCell.x, crossingPoint.y - runner.positionInCell.y)
         .normalized * newNextStepLength * 0.99
       return runner.withNextStep(newNextStep)
     }
@@ -558,12 +622,12 @@ final case class GeoKinPlanCreator() extends PlanCreator[ContinuousEnvConfig] {
     val cells: Map[(ContinuousEnvCell, UUID), Direction] = neighbourContents + ((currentCell, UUID.randomUUID()) -> null)
     val obstacleSegments: Iterable[Line] = ObstacleMapping.NeighborContentsExtensions(cells)
       .mapToObstacleLines(config.cellSize)
-      .filter(line => line.segmentDistance(runner.position + runner.nextStep) < 0.1)
+      .filter(line => line.segmentDistance(runner.positionInCell + runner.nextStep) < 0.1)
     if (obstacleSegments.isEmpty) {
       runner
     }
     else {
-      val repellingForceBase = obstacleSegments.flatMap(segment => getObstacleDirection(segment, runner.position + runner.nextStep, 0.1) match {
+      val repellingForceBase = obstacleSegments.flatMap(segment => getObstacleDirection(segment, runner.positionInCell + runner.nextStep, 0.1) match {
         case GridDirection.Top => Some(toBottom)
         case GridDirection.Right => Some(toLeft)
         case GridDirection.Bottom => Some(toTop)
@@ -652,7 +716,8 @@ final case class GeoKinPlanCreator() extends PlanCreator[ContinuousEnvConfig] {
                          neighbourContents: Map[(ContinuousEnvCell, UUID), Direction],
                          state: NeighbourhoodState,
                          config: ContinuousEnvConfig): (CellId, Plan) = {
-    if (runner.nextStep.lengthSq > 0) {
+    if (runner.nextStep.lengthSq > 0)
+    {
       //      val onTheRightSideRunners = filterRunnersBySide(runner, allReachableRunners.toSeq)
       val inflatedRunners = inflateRunners(allReachableRunners.toSeq)
 
@@ -668,12 +733,14 @@ final case class GeoKinPlanCreator() extends PlanCreator[ContinuousEnvConfig] {
 
       val movedRunner = runner.completeMove(safeMoveCompletion)
       val (normalizedRunner, destinationDirection) = movedRunner.normalizePosition(config.cellSize)
-      if (destinationDirection.isEmpty) {
+      if (destinationDirection.isEmpty)
+      {
         (cellId, Plan(StateUpdate(RunnerOccupied(generation + 1, Set(normalizedRunner)))))
       }
-      else {
+      else
+      {
         normalizedRunner.path = List.empty
-        (getTargetNeighbour(cell.neighbourhood, cell, destinationDirection.get.asInstanceOf[GridDirection], Line(runner.position, movedRunner.position)),
+        (getTargetNeighbour(cell.neighbourhood, cell, destinationDirection.get.asInstanceOf[GridDirection], Line(runner.positionInCell, movedRunner.positionInCell)),
           Plan(StateUpdate(RunnerOccupied(generation + 1, Set(normalizedRunner)))))
       }
       //musi być runner occupied, żeby móc kilkukrotnie przy resolve plans wpisać dodatkowych agentów do tej samej komórki tak żeby się wszyscy zapisali
@@ -710,8 +777,8 @@ final case class GeoKinPlanCreator() extends PlanCreator[ContinuousEnvConfig] {
 
   private def getTargetCell(cells: Iterable[ContinuousEnvCell],
                             runner: Runner): ContinuousEnvCell = {
-    cells.find(cell => (cell.cellOutline.x.doubleValue <= runner.position.x && runner.position.x <= (cell.cellOutline.x + cell.cellOutline.width).doubleValue)
-      && (cell.cellOutline.y.doubleValue <= runner.position.y && runner.position.y <= (cell.cellOutline.y + cell.cellOutline.height).doubleValue)).orNull
+    cells.find(cell => (cell.cellOutline.x.doubleValue <= runner.positionInCell.x && runner.positionInCell.x <= (cell.cellOutline.x + cell.cellOutline.width).doubleValue)
+      && (cell.cellOutline.y.doubleValue <= runner.positionInCell.y && runner.positionInCell.y <= (cell.cellOutline.y + cell.cellOutline.height).doubleValue)).orNull
   }
 
   private def inflateRunners(runners: Seq[Runner]): Seq[Runner] = runners.map(_.inflate(0.01))

@@ -8,7 +8,7 @@ case class Neighbourhood(cardinalNeighbourhood: Map[GridDirection, Boundary],
                          diagonalNeighbourhood: Map[GridDirection, GridMultiCellId])
 
 object Neighbourhood {
-  private val Empty = Neighbourhood(
+  private val Empty: Neighbourhood = Neighbourhood.apply(
     Map(
       Top -> Boundary.empty(),
       Right -> Boundary.empty(),
@@ -22,7 +22,7 @@ object Neighbourhood {
       BottomLeft -> null
     ))
 
-  def empty(): Neighbourhood = Empty
+  def empty(): Neighbourhood = return Neighbourhood.Empty
 }
 
 case class NeighbourhoodState(cardinalNeighbourhoodState: Map[GridDirection, BoundaryState],

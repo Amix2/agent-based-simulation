@@ -8,6 +8,7 @@ trait XinukConfig {
   def worldWidth: Int
   def worldHeight: Int
   def iterationsNumber: Long
+  def deltaTime: Double
 
   def signalSuppressionFactor: Double
   def signalAttenuationFactor: Double
@@ -23,6 +24,8 @@ trait XinukConfig {
   def cellSize: Int
 
   def obstacles: List[Obstacle]
+
+  def toMeters(dist: Int): Double = dist * 0.01;
 }
 
 sealed trait GuiType extends NamedEnum

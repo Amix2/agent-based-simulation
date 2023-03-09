@@ -1,6 +1,7 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="Rabbits parallel worker" type="Application" factoryName="Application" folderName="rabbits" singleton="false">
-    <option name="ALTERNATIVE_JRE_PATH" value="azul-11" />
+    <option name="ALTERNATIVE_JRE_PATH" value="17" />
+    <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="true" />
     <output_file path="$PROJECT_DIR$/log/worker.log" is_save="true" />
     <option name="MAIN_CLASS_NAME" value="pl.edu.agh.rabbits.RabbitsMain" />
     <module name="rabbits" />

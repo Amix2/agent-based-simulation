@@ -1,10 +1,11 @@
 package pl.edu.agh.xinuk.config
 
 import com.typesafe.config.Config
+import io.jvm.uuid.UUID
 import net.ceedubs.ficus.FicusInstances
 import net.ceedubs.ficus.readers.{ArbitraryTypeReader, ValueReader}
 import pl.edu.agh.xinuk.model.grid.GridWorldType
-import pl.edu.agh.xinuk.model.{Signal, WorldType}
+import pl.edu.agh.xinuk.model.{AgentSignal, Signal, WorldType}
 
 object ValueReaders extends FicusInstances with ArbitraryTypeReader {
 
@@ -22,6 +23,6 @@ object ValueReaders extends FicusInstances with ArbitraryTypeReader {
 
   implicit val signalReader: ValueReader[Signal] =
     new ValueReader[Signal] {
-      override def read(config: Config, path: String): Signal = Signal(config.getNumber(path).doubleValue())
+      override def read(config: Config, path: String): Signal = Signal(config.getNumber(path).doubleValue(), Map.empty[UUID, AgentSignal])
     }
 }

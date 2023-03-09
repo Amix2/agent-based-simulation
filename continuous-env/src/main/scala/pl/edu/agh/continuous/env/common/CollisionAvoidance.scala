@@ -40,7 +40,7 @@ object CollisionAvoidance {
         val cells: Map[(ContinuousEnvCell, UUID), Direction] = neighbourContents + ((currentCell, UUID.randomUUID()) -> null)
         ObstacleMapping.NeighborContentsExtensions(cells)
           .mapToObstacleLines(cellSize)
-          .map(boundary => (boundary, boundary.intersect(Line(runner.position, runner.position + runner.nextStep))))
+          .map(boundary => (boundary, boundary.intersect(Line(runner.positionInCell, runner.positionInCell + runner.nextStep))))
           .filter(intersection => intersection._2.nonEmpty)
           .filter(intersection => intersection._2.get.onLine1 && intersection._2.get.onLine2)
           .map(intersection => intersection._1)
@@ -69,13 +69,13 @@ object CollisionAvoidance {
 
     def getMaxMoveCompletionConsideringOtherRunnersBodies(runners: Seq[Runner]): MoveCompletion = {
       try {
-        val position = runner.position
+        val position = runner.positionInCell
         val normalToStep = runner.nextStep.normal
         val sidePoint = position + normalToStep
 
         runners
           .filter(otherRunner => otherRunner.body.intersects(runner.sweptBody))
-          .filter(x => isPositionAhead(x.position, runner.nextStep, sidePoint))
+          .filter(x => isPositionAhead(x.positionInCell, runner.nextStep, sidePoint))
           .map(otherRunner => getMaxMoveCompletionRespectingCircle(otherRunner.body))
           .minByValueOption
           .getOrElse(MoveCompletion.max(tag = "d"))
@@ -95,7 +95,7 @@ object CollisionAvoidance {
 
     def getMaxMoveCompletionConsideringOtherRunnersSweptBodies(runners: Seq[Runner]): MoveCompletion = {
       try {
-        val position = runner.position
+        val position = runner.positionInCell
         val normalToStep = runner.nextStep.normal
         val sidePoint = position + normalToStep
 
@@ -104,7 +104,7 @@ object CollisionAvoidance {
           .filter(otherRunner => otherRunner.sweptBody.intersects(runner.sweptBody)) // only the runners that we are in
           // conflict with
           .filter(x =>
-            isPositionAhead(x.position, runner.nextStep, sidePoint) ||
+            isPositionAhead(x.positionInCell, runner.nextStep, sidePoint) ||
               isPositionAhead(x.endPosition, runner.nextStep, sidePoint))
           .map(otherRunner => runner.getMaxMoveCompletionRespectingInvariantSweptCircle(otherRunner.sweptBody))
           .minByValueOption
@@ -137,7 +137,7 @@ object CollisionAvoidance {
           val otherRunner = Runner.createNewMock(invariantSweptCircle, runner.speed, runner.color)
           val otherRunnerMoveCompletion = otherRunner.getMaxMoveCompletionRespectingCircle(runner.body)
           val otherRunnerMaxMoveCompletionEndPosition = otherRunner.endPosition(otherRunnerMoveCompletion)
-          val v = otherRunnerMaxMoveCompletionEndPosition - runner.position
+          val v = otherRunnerMaxMoveCompletionEndPosition - runner.positionInCell
           val w = runner.nextStep
           val cos = (v dot w) / (v.length * w.length)
 

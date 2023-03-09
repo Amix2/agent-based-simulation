@@ -11,8 +11,8 @@ import java.util.UUID
 final case class GeoKinPlanResolver() extends PlanResolver[ContinuousEnvConfig] {
   override def isUpdateValid(contents: CellContents, update: StateUpdate)(implicit config: ContinuousEnvConfig): Boolean =
     (contents, update.value) match {
-      case (ContinuousEnvCell(config.initialSignal), RunnerOccupied(_, _)) => true // Runner finishes
-      case (ContinuousEnvCell(_), RunnerOccupied(_, _)) => true // Runners crowd up
+      case (ContinuousEnvCell(config.initialSignal, _), RunnerOccupied(_, _)) => true // Runner finishes
+      case (ContinuousEnvCell(_, _), RunnerOccupied(_, _)) => true // Runners crowd up
       case _ =>
         //reportDiagnostics(InvalidUpdateDiagnostic(left.getClass.getTypeName, right.getClass.getTypeName))
         false // nothing else is allowed
@@ -75,7 +75,7 @@ final case class GeoKinPlanResolver() extends PlanResolver[ContinuousEnvConfig] 
 
   private def getRunnersCoords(runners: Array[Runner]): Map[UUID, (Double, Double, Double, Color)] = {
     var result: Map[UUID, (Double, Double, Double, Color)] = Map.empty
-    runners.foreach(runner => result += (runner.id -> (runner.position.x, runner.position.y, runner.radius, runner.color)))
+    runners.foreach(runner => result += (runner.id -> (runner.positionInCell.x, runner.positionInCell.y, runner.radius, runner.color)))
     result
   }
 }

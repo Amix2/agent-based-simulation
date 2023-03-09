@@ -1,8 +1,9 @@
 package pl.edu.agh.xinuk.model.grid
 
+import io.jvm.uuid.UUID
 import pl.edu.agh.xinuk.config.XinukConfig
 import pl.edu.agh.xinuk.model.continuous.NeighbourhoodState
-import pl.edu.agh.xinuk.model.{Direction, Signal, SignalMap, SignalPropagation}
+import pl.edu.agh.xinuk.model.{AgentSignal, Cell, Direction, Signal, SignalMap, SignalPropagation}
 
 object GridSignalPropagation {
 
@@ -12,18 +13,24 @@ object GridSignalPropagation {
   @inline private def getPropagatedSignal(neighbourhoodState: NeighbourhoodState, neighbourDirection: Direction, signalDirection: Direction)
                                          (implicit config: XinukConfig): Signal = {
     neighbourDirection match {
+
       case cardinal@(GridDirection.Top | GridDirection.Right | GridDirection.Bottom | GridDirection.Left) =>
         neighbourhoodState.cardinalNeighbourhoodState(cardinal.asInstanceOf[GridDirection])
           .boundaryStates
-          .map { case (segment, cellState) => Signal((segment.b - segment.a) / config.cellSize * cellState.signalMap(signalDirection).value) }
+          .map { case (segment, cellState) => Signal((segment.b - segment.a) / config.cellSize * cellState.signalMap(signalDirection).value, cellState.signalMap(signalDirection).agentSignals) }
           .foldLeft(Signal.zero)(_ + _)
+
       case diagonal@(GridDirection.TopLeft | GridDirection.TopRight | GridDirection.BottomRight | GridDirection.BottomLeft) =>
-        if (neighbourhoodState.diagonalNeighbourhoodState.contains(diagonal.asInstanceOf[GridDirection])) {
+        if (neighbourhoodState.diagonalNeighbourhoodState.contains(diagonal.asInstanceOf[GridDirection]))
+        {
           neighbourhoodState.diagonalNeighbourhoodState(diagonal.asInstanceOf[GridDirection])
             .signalMap(signalDirection)
-        } else {
+        }
+        else
+        {
           Signal.zero
         }
+
       case _ => Signal.zero
     }
   }
@@ -34,7 +41,7 @@ object GridSignalPropagation {
       case cardinal@(GridDirection.Top | GridDirection.Right | GridDirection.Bottom | GridDirection.Left) =>
         neighbourhoodState.cardinalNeighbourhoodState(cardinal.asInstanceOf[GridDirection])
           .boundaryStates
-          .map { case (segment, cellState) => Signal((segment.b - segment.a) / config.cellSize * cellState.contents.generateSignal(iteration).value) }
+          .map { case (segment, cellState) => Signal((segment.b - segment.a) / config.cellSize * cellState.contents.generateSignal(iteration).value, cellState.contents.generateSignal(iteration).agentSignals) }
           .foldLeft(Signal.zero)(_ + _)
       case diagonal@(GridDirection.TopLeft | GridDirection.TopRight | GridDirection.BottomRight | GridDirection.BottomLeft) =>
         if (neighbourhoodState.diagonalNeighbourhoodState.contains(diagonal.asInstanceOf[GridDirection])) {
@@ -49,7 +56,7 @@ object GridSignalPropagation {
   }
 
   private final object GridSignalPropagationStandard extends SignalPropagation {
-    def calculateUpdate(iteration: Long, neighbourhoodState: NeighbourhoodState)(implicit config: XinukConfig): SignalMap = {
+    def calculateUpdate(iteration: Long, neighbourhoodState: NeighbourhoodState, cell: Cell)(implicit config: XinukConfig): SignalMap = {
       config.worldType.directions.map({
         case cardinal@(GridDirection.Top | GridDirection.Right | GridDirection.Bottom | GridDirection.Left) =>
           (
@@ -72,13 +79,25 @@ object GridSignalPropagation {
     def direct: Double = 0.42
     def adjacent: Double = 0.29
 
-    def calculateUpdate(iteration: Long, neighbourhoodState: NeighbourhoodState)(implicit config: XinukConfig): SignalMap = {
-      config.worldType.directions.map(direction =>
+    def getSelfGeneratedSignal(cell: Cell, iteration: Long)(implicit config: XinukConfig): Signal =
+      Signal(0, cell.state.contents.generateSignal(iteration).agentSignals)
+
+    def calculateUpdate(iteration: Long, neighbourhoodState: NeighbourhoodState, cell: Cell)(implicit config: XinukConfig): SignalMap = {
+      config.worldType.directions.map(direction => {
+        val propagatedSignal = getPropagatedSignal(neighbourhoodState, direction, direction)
+        val generatedSignal = getGeneratedSignal(neighbourhoodState, direction, iteration)
+        val selfGeneratedSignal = getSelfGeneratedSignal(cell, iteration)
+        val adjacentSignal = direction.adjacent.map { d => getPropagatedSignal(neighbourhoodState, direction, d) }.reduce(_ + _)
         (direction,
-          getPropagatedSignal(neighbourhoodState, direction, direction) * direct +
-            direction.adjacent.map { d => getPropagatedSignal(neighbourhoodState, direction, d) }.reduce(_ + _) * adjacent +
-            getGeneratedSignal(neighbourhoodState, direction, iteration)
+          propagatedSignal * direct
+            +
+            adjacentSignal * adjacent
+            +
+            generatedSignal
+            +
+            selfGeneratedSignal
         )
+      }
       ).toMap
     }
   }

@@ -1,8 +1,9 @@
 package pl.edu.agh.continuous.env.common
 
 import pl.edu.agh.continuous.env.common.CellBoundedPosition.PositionExtensions
-import pl.edu.agh.continuous.env.common.geometry.{Line, Vec2}
+import pl.edu.agh.continuous.env.common.geometry.Line
 import pl.edu.agh.continuous.env.model.ContinuousEnvCell
+import pl.edu.agh.xinuk.algorithm.Vec2
 import pl.edu.agh.xinuk.config.{Obstacle, ObstacleSegment}
 import pl.edu.agh.xinuk.model.Direction
 

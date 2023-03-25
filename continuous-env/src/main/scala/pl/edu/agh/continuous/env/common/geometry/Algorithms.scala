@@ -1,5 +1,7 @@
 package pl.edu.agh.continuous.env.common.geometry
 
+import pl.edu.agh.xinuk.algorithm.Vec2
+
 object Algorithms {
 
   def distancePointLine(x0: Double, y0: Double, x1: Double, y1: Double, x2: Double, y2: Double): Double = {

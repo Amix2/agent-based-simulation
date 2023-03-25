@@ -1,6 +1,6 @@
 package pl.edu.agh.continuous.env.model
 
-import pl.edu.agh.continuous.env.common.MathUtils.DoubleExtensions
+import pl.edu.agh.xinuk.algorithm.MathUtils.DoubleExtensions
 import pl.edu.agh.continuous.env.config.ContinuousEnvConfig
 import pl.edu.agh.xinuk.config.XinukConfig
 import pl.edu.agh.xinuk.model.{CellContents, Signal}
@@ -20,5 +20,5 @@ final case class RunnerOccupied(generation: Long, runners: Set[Runner]) extends 
   private def totalCellField(implicit config: XinukConfig): Double =
     math.pow(config.asInstanceOf[ContinuousEnvConfig].cellSize, 2.0)
 
-  private def totalRunnersField: Double = runners.map(_.mass).sum
+  private def totalRunnersField: Double = runners.map(_.fakeMass).sum
 }

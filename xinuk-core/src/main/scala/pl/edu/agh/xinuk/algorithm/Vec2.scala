@@ -1,6 +1,6 @@
-package pl.edu.agh.continuous.env.common.geometry
+package pl.edu.agh.xinuk.algorithm
 
-import pl.edu.agh.continuous.env.common.MathUtils.DoubleExtensions
+import pl.edu.agh.xinuk.algorithm.MathUtils.DoubleExtensions
 
 import scala.language.reflectiveCalls
 

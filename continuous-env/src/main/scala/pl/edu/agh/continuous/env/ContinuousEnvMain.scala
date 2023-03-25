@@ -46,15 +46,15 @@ object ContinuousEnvMain extends LazyLogging {
     var count = 0;
     var maxVal = 0.0;
 
-    var messages = cellState.signalMap.toAgentMessages;
+    var messages = cellState.signalMap.toObjectMessages;
     messages.foreach({ case (id, sig) => {
-      maxVal = math.max(maxVal, sig.distanceToLive);
+      maxVal = math.max(maxVal, sig.GetDistanceToLive());
       count += 1;
     }
     })
-    var sum = 15;
-    var co = Math.min((count.intValue() % sum) * 255/sum, 255);
-    var co2 = Math.min(((count.intValue() +sum/2) % sum) * 255/sum, 255);
+    var sum = 8;
+    var co = Math.min((maxVal.intValue() % sum) * 255/sum, 255);
+    var co2 = Math.min(((maxVal.intValue() +sum/2) % sum) * 255/sum, 255);
     return new Color(0, co2,(co).toInt)
     if (continuousEnvCell.initialSignal.value > 0) {
       Color.BLUE

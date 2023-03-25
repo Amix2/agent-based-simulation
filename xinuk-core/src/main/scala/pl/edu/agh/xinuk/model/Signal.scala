@@ -5,63 +5,73 @@ import pl.edu.agh.xinuk.config.XinukConfig
 
 import scala.math.sqrt
 
-object AgentSignal {
-  def createNew(posX: Double, posY: Double)  = new AgentSignal(1, 6, 50.8, posX, posY)
+object AgentMessage {
+  def createNew(posX: Double, posY: Double)  = new AgentMessage(1, 8, 50.8, posX, posY)
 }
-case class AgentSignal(smell: Double, distanceToLive : Double,  timeToLive: Double, posX: Double, posY: Double) extends Ordered[AgentSignal]
+
+object ObstacleMessage {
+  def createNew(xs: Array[Int], ys: Array[Int], points: Int)  = new ObstacleMessage(8, xs, ys, points)
+}
+
+trait ObjectMessage extends Ordered[ObjectMessage]
 {
-  def *(factor: Double): AgentSignal = AgentSignal(smell * factor, distanceToLive, timeToLive, posX, posY);
-  def removeDistanceAndTime(dist : Double, time : Double): AgentSignal = AgentSignal(smell, distanceToLive-dist, timeToLive-time, posX, posY);
-
-  override def compare(that: AgentSignal): Int = Ordering.Double.TotalOrdering.compare(smell, that.smell)
+  def GetDistanceToLive() : Double;
+  def DecreaseDistanceToLive(value: Double) : ObjectMessage;
+  override def compare(that: ObjectMessage): Int = Ordering.Double.TotalOrdering.compare(GetDistanceToLive(), that.GetDistanceToLive())
+  def IsValid(): Boolean = GetDistanceToLive() > 0;
 }
 
+case class AgentMessage(smell: Double, distanceToLive : Double, timeToLive: Double, posX: Double, posY: Double) extends ObjectMessage
+{
+  override def GetDistanceToLive(): Double = distanceToLive
 
-final case class Signal(value: Double, agentSignals: Map[UUID, AgentSignal]) extends Ordered[Signal] {
+  override def DecreaseDistanceToLive(value: Double): AgentMessage = AgentMessage(smell, distanceToLive-value, timeToLive, posX, posY);
+}
+
+case class ObstacleMessage(distanceToLive : Double, xs: Array[Int], ys: Array[Int], points: Int) extends ObjectMessage
+{
+  override def GetDistanceToLive(): Double = distanceToLive
+
+  override def DecreaseDistanceToLive(value: Double): ObstacleMessage = ObstacleMessage(distanceToLive-value, xs, ys, points);
+}
+
+final case class Signal(value: Double, objectMessages: Map[UUID, ObjectMessage])  {
   def RemoveExpiredMessages(): Signal = {
-    Signal(this.value, agentSignals.filter(agentSig => agentSig._2.timeToLive > 0 && agentSig._2.distanceToLive > 0))
+    Signal(this.value, objectMessages.filter(objMsg => objMsg._2.IsValid()))
   }
 
   def AddDistanceToAgentMessage(dist: Double, time: Double): Signal = {
     Signal(this.value
-      , agentSignals.map(
+      , objectMessages.map(
         { case (id, sig) =>
-          (id, sig.removeDistanceAndTime(dist, time))
+          (id, sig.DecreaseDistanceToLive(dist))
         }
       ))
   }
 
-  def CombineAgentSignal(signalA : Map[UUID, AgentSignal], signalB : Map[UUID, AgentSignal]): Map[UUID, AgentSignal] =
+  def CombineAgentSignal(signalA : Map[UUID, ObjectMessage], signalB : Map[UUID, ObjectMessage]): Map[UUID, ObjectMessage] =
   {
     val merged = signalA.toSeq ++ signalB.toSeq
     val grouped = merged.groupBy(_._1)
-    var groupedCleared = grouped.map({ case (key, value) => (key, value.map(T => T._2).max) })
-    groupedCleared
+    return grouped.map({ case (key, value) => (key, value.map(T => T._2).max) })
   }
-  def +(other: Signal): Signal = Signal(value + other.value, CombineAgentSignal(agentSignals, other.agentSignals))
+  def +(other: Signal): Signal = Signal(value + other.value, CombineAgentSignal(objectMessages, other.objectMessages))
 
-  //def -(other: Signal): Signal = Signal(value - other.value, agentSignals)
+  def *(factor: Double): Signal = Signal(value * factor, objectMessages)
 
-  def MulAgentSignal(factor : Double): ((UUID, AgentSignal)) => (UUID, AgentSignal) = {
-    case (key, value) =>
-      key -> value * factor
-  }
-  def *(factor: Double): Signal = Signal(value * factor, agentSignals.map(MulAgentSignal(factor)))
+  private def /(divisor: Double): Signal = Signal(value / divisor, objectMessages)
 
-  private def /(divisor: Double): Signal = Signal(value / divisor, agentSignals.map(MulAgentSignal(1/divisor)))
-
-   override def compare(that: Signal): Int = Ordering.Double.TotalOrdering.compare(value, that.value)
 }
 
 object Signal {
-  private final val Zero = Signal(0d, Map.empty[UUID, AgentSignal])
+  private final val Zero = Signal(0d, Map.empty[UUID, AgentMessage])
 
   def zero: Signal = Zero
 }
 
 final case class SignalMap(value: Map[Direction, Signal]) extends AnyVal {
   def removeAgentSignals()(implicit config: XinukConfig): SignalMap = {
-    this.map(vDS => (vDS._1, Signal(vDS._2.value, Map.empty[UUID, AgentSignal])))
+    this.map(vDS => (vDS._1, Signal(vDS._2.value, Map.empty[UUID, AgentMessage])))
   }
 
   def apply(direction: Direction): Signal = value(direction)

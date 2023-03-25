@@ -1,9 +1,10 @@
 package pl.edu.agh.continuous.env.model
 
-import pl.edu.agh.continuous.env.common.MathUtils.DoubleExtensions
-import pl.edu.agh.continuous.env.common.geometry.{Line, Vec2}
+import pl.edu.agh.xinuk.algorithm.MathUtils.DoubleExtensions
+import pl.edu.agh.continuous.env.common.geometry.Line
 import pl.edu.agh.continuous.env.config.ContinuousEnvConfig
 import pl.edu.agh.continuous.env.model.continuous.CellOutline
+import pl.edu.agh.xinuk.algorithm.Vec2
 import pl.edu.agh.xinuk.config.{Obstacle, XinukConfig}
 import pl.edu.agh.xinuk.model.continuous.{GridMultiCellId, Neighbourhood}
 import pl.edu.agh.xinuk.model.{CellContents, Signal}
@@ -11,7 +12,14 @@ import pl.edu.agh.xinuk.model.{CellContents, Signal}
 final case class ContinuousEnvCell(initialSignal: Signal, gridMultiCellId: GridMultiCellId)(implicit config: ContinuousEnvConfig) extends CellContents {
   override def generateSignal(iteration: Long)(implicit config: XinukConfig): Signal =
     { // runners can generate signal in cell they are standing on
-      var signals = (List(initialSignal) ++ runners.map(r => r.GenerateSignal(iteration * config.deltaTime, this)))
+      if(obstacles.length> 0)
+        {
+          obstacles.foreach(obs => println(obs.points))
+        }
+      var signals = (List(initialSignal)
+        ++ runners.map(r => r.GenerateSignal(iteration * config.deltaTime, this))
+       // ++ obstacles.map(r => r.GenerateSignal(iteration * config.deltaTime))
+        )
         .foldLeft(Signal.zero)(_ + _);
       signals
     }
@@ -27,7 +35,7 @@ final case class ContinuousEnvCell(initialSignal: Signal, gridMultiCellId: GridM
   private def totalCellField(): Double =
     cellOutline.width * cellOutline.height
 
-  private def totalRunnersField: Double = runners.map(_.mass).sum
+  private def totalRunnersField: Double = runners.map(_.fakeMass).sum
   def BaseCoordinates: Vec2 = Vec2(gridMultiCellId.y * cellOutline.width, gridMultiCellId.x * cellOutline.height);
 
   var cellOutline: CellOutline = CellOutline.default()

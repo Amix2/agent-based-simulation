@@ -72,6 +72,7 @@ class WorkerActor[ConfigType <: XinukConfig](
       iterationMetrics = emptyMetrics
       val plans: Seq[TargetedPlan] = worldShard.localCellIds.map(worldShard.cells(_)).flatMap(createPlans).toSeq
       distributePlans(currentIteration, plans)
+      //Thread.sleep(10);
 
     case RemotePlans(iteration, remotePlans) =>
       plansStash(iteration) :+= remotePlans
@@ -156,8 +157,6 @@ class WorkerActor[ConfigType <: XinukConfig](
   }
 
   private def applyUpdate(stateUpdate: TargetedStateUpdate): Unit = {
-    Thread.sleep(10)
-
     val target = worldShard.cells(stateUpdate.target)
     val action = stateUpdate.update
     val (result, metrics) = planResolver.applyUpdate(target.state.contents, action)
@@ -206,7 +205,7 @@ class WorkerActor[ConfigType <: XinukConfig](
   private def distributeSignal(iteration: Long, signalToDistribute: Map[CellId, SignalMap]): Unit = {
     signalToDistribute.foreach({case (id, signal) => {
       signal.foreach({case (dir, signal: Signal) => {
-        if(signal.agentSignals.size > 0)
+        if(signal.objectMessages.size > 0)
           {
             var t =0 ;
           }

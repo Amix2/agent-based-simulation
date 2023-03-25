@@ -2,7 +2,7 @@ package pl.edu.agh.continuous.env.common
 
 import pl.edu.agh.continuous.env.common.CellBoundedPosition.{After, Before, CoordinateToCellRelation, OutOfRange, PositionExtensions, Within}
 import pl.edu.agh.continuous.env.common.ToVec2Conversions.DirectionConversionExtensions
-import pl.edu.agh.continuous.env.common.geometry.Vec2
+import pl.edu.agh.xinuk.algorithm.Vec2
 import pl.edu.agh.xinuk.model.Direction
 import pl.edu.agh.xinuk.model.grid.GridDirection
 

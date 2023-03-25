@@ -1,10 +1,10 @@
 package pl.edu.agh.continuous.env.common
 
 import io.jvm.uuid.UUID
-import pl.edu.agh.continuous.env.common.geometry.Vec2
+import pl.edu.agh.xinuk.algorithm.Vec2
 import pl.edu.agh.xinuk.model.SignalMap.signalMap2Map
 import pl.edu.agh.xinuk.model.grid.GridDirection
-import pl.edu.agh.xinuk.model.{AgentSignal, Direction, Signal, SignalMap}
+import pl.edu.agh.xinuk.model.{AgentMessage, Direction, ObjectMessage, Signal, SignalMap}
 
 import scala.language.implicitConversions
 
@@ -59,9 +59,9 @@ object ToVec2Conversions {
       .map { case (vec, signal) => vec * signal.value }
       .fold(Vec2.zero)((v1: Vec2, v2: Vec2) => v1 + v2)
 
-    def toAgentMessages: Map[UUID, AgentSignal] = signalMap2Map(signalMap)
+    def toObjectMessages: Map[UUID, ObjectMessage] = signalMap2Map(signalMap)
         .values
-        .foldLeft(Signal.zero)(_ + _).agentSignals
+        .foldLeft(Signal.zero)(_ + _).objectMessages
   }
 
 }

@@ -3,7 +3,7 @@ package pl.edu.agh.xinuk.model.grid
 import io.jvm.uuid.UUID
 import pl.edu.agh.xinuk.config.XinukConfig
 import pl.edu.agh.xinuk.model.continuous.NeighbourhoodState
-import pl.edu.agh.xinuk.model.{AgentSignal, Cell, Direction, Signal, SignalMap, SignalPropagation}
+import pl.edu.agh.xinuk.model.{AgentMessage, Cell, Direction, Signal, SignalMap, SignalPropagation}
 
 object GridSignalPropagation {
 
@@ -17,7 +17,7 @@ object GridSignalPropagation {
       case cardinal@(GridDirection.Top | GridDirection.Right | GridDirection.Bottom | GridDirection.Left) =>
         neighbourhoodState.cardinalNeighbourhoodState(cardinal.asInstanceOf[GridDirection])
           .boundaryStates
-          .map { case (segment, cellState) => Signal((segment.b - segment.a) / config.cellSize * cellState.signalMap(signalDirection).value, cellState.signalMap(signalDirection).agentSignals) }
+          .map { case (segment, cellState) => Signal((segment.b - segment.a) / config.cellSize * cellState.signalMap(signalDirection).value, cellState.signalMap(signalDirection).objectMessages) }
           .foldLeft(Signal.zero)(_ + _)
 
       case diagonal@(GridDirection.TopLeft | GridDirection.TopRight | GridDirection.BottomRight | GridDirection.BottomLeft) =>
@@ -41,7 +41,7 @@ object GridSignalPropagation {
       case cardinal@(GridDirection.Top | GridDirection.Right | GridDirection.Bottom | GridDirection.Left) =>
         neighbourhoodState.cardinalNeighbourhoodState(cardinal.asInstanceOf[GridDirection])
           .boundaryStates
-          .map { case (segment, cellState) => Signal((segment.b - segment.a) / config.cellSize * cellState.contents.generateSignal(iteration).value, cellState.contents.generateSignal(iteration).agentSignals) }
+          .map { case (segment, cellState) => Signal((segment.b - segment.a) / config.cellSize * cellState.contents.generateSignal(iteration).value, cellState.contents.generateSignal(iteration).objectMessages) }
           .foldLeft(Signal.zero)(_ + _)
       case diagonal@(GridDirection.TopLeft | GridDirection.TopRight | GridDirection.BottomRight | GridDirection.BottomLeft) =>
         if (neighbourhoodState.diagonalNeighbourhoodState.contains(diagonal.asInstanceOf[GridDirection])) {
@@ -80,7 +80,7 @@ object GridSignalPropagation {
     def adjacent: Double = 0.29
 
     def getSelfGeneratedSignal(cell: Cell, iteration: Long)(implicit config: XinukConfig): Signal =
-      Signal(0, cell.state.contents.generateSignal(iteration).agentSignals)
+      Signal(0, cell.state.contents.generateSignal(iteration).objectMessages)
 
     def calculateUpdate(iteration: Long, neighbourhoodState: NeighbourhoodState, cell: Cell)(implicit config: XinukConfig): SignalMap = {
       config.worldType.directions.map(direction => {

@@ -2,10 +2,12 @@ package pl.edu.agh.continuous.env.common
 
 import pl.edu.agh.continuous.env.common.CollisionAvoidance.Exceptions.{CircleMoveCompletionComputationException, GeneralMoveCompletionComputationException, LineMoveCompletionComputationException, MoveCompletionComputationException, ObstaclesMoveCompletionComputationException, OtherRunnersBodiesMoveCompletionComputationException, OtherRunnersMoveCompletionComputationException, OtherRunnersSweptBodiesMoveCompletionComputationException, SideCaseMoveCompletionComputationException, SweptCircleMoveCompletionComputationException}
 import pl.edu.agh.continuous.env.common.EquationSolvers.{QuadraticEquationDoubleResult, QuadraticEquationSingleResult, solveQuadraticEquation}
-import pl.edu.agh.continuous.env.common.MathUtils.DoubleExtensions
-import pl.edu.agh.continuous.env.common.geometry.{Circle, Line, SweptCircle, Vec2}
+import pl.edu.agh.xinuk.algorithm.MathUtils.DoubleExtensions
+import pl.edu.agh.continuous.env.common.geometry.{Circle, Line, SweptCircle}
 import pl.edu.agh.continuous.env.config.ContinuousEnvConfig
 import pl.edu.agh.continuous.env.model.{ContinuousEnvCell, MoveCompletion, Runner}
+import pl.edu.agh.xinuk.algorithm
+import pl.edu.agh.xinuk.algorithm.Vec2
 import pl.edu.agh.xinuk.model.{CellContents, Direction}
 
 import java.util.UUID
@@ -178,7 +180,7 @@ object CollisionAvoidance {
                 val cProjected = invariantSweptCircleLine.pointProjection(cPoint)
 
                 if (invariantSweptCircleLine.segmentContains(cProjected)) {
-                  value.withNormal(Vec2(
+                  value.withNormal(algorithm.Vec2(
                     from = cProjected,
                     to = runner.endPosition(value)
                   ))
@@ -238,7 +240,7 @@ object CollisionAvoidance {
               case QuadraticEquationSingleResult(result) => MoveCompletion(result.abs, tag = "c_q1")
             }
 
-            moveCompletion.withNormal(Vec2(
+            moveCompletion.withNormal(algorithm.Vec2(
               from = invariantCircle.center,
               to = runner.endPosition(moveCompletion)
             ))

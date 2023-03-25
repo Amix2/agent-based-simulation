@@ -1,6 +1,6 @@
 package pl.edu.agh.continuous.env.common.geometry
 
-import pl.edu.agh.continuous.env.common.MathConstants
+import pl.edu.agh.xinuk.algorithm.{MathConstants, Vec2}
 
 final case class Line(start: Vec2, end: Vec2) {
   def x1: Double = start.x

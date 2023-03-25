@@ -1,5 +1,7 @@
 package pl.edu.agh.continuous.env.common.geometry
 
+import pl.edu.agh.xinuk.algorithm.Vec2
+
 final case class Circle(center: Vec2, r: Double) {
   def x: Double = center.x
 

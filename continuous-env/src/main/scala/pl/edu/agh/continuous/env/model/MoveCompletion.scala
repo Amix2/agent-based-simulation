@@ -1,8 +1,8 @@
 package pl.edu.agh.continuous.env.model
 
-import pl.edu.agh.continuous.env.common.MathUtils.DoubleExtensions
-import pl.edu.agh.continuous.env.common.geometry.Vec2
+import pl.edu.agh.xinuk.algorithm.MathUtils.DoubleExtensions
 import pl.edu.agh.continuous.env.model.MoveCompletion.{roundedValue, safeValue}
+import pl.edu.agh.xinuk.algorithm.Vec2
 
 
 final case class MoveCompletion(value: Double, normal: Option[Vec2], penalty: Boolean, tag: String) extends Ordered[MoveCompletion] {

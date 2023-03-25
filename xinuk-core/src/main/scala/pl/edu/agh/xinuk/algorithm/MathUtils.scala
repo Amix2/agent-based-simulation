@@ -1,6 +1,4 @@
-package pl.edu.agh.continuous.env.common
-
-import pl.edu.agh.continuous.env.common.MathConstants
+package pl.edu.agh.xinuk.algorithm
 
 object MathUtils {
   implicit class DoubleExtensions(val value: Double) {

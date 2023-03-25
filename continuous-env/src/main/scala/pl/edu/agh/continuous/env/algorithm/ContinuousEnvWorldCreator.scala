@@ -4,11 +4,11 @@ import org.locationtech.jts.geom.{Coordinate, Envelope, GeometryCollection, Geom
 import org.locationtech.jts.operation.buffer.BufferParameters
 import org.locationtech.jts.triangulate.VoronoiDiagramBuilder
 import org.slf4j.Logger
-import pl.edu.agh.continuous.env.common.geometry.{Line, Vec2}
+import pl.edu.agh.continuous.env.common.geometry.Line
 import pl.edu.agh.continuous.env.config.ContinuousEnvConfig
 import pl.edu.agh.continuous.env.model.continuous.CellOutline
 import pl.edu.agh.continuous.env.model.{ContinuousEnvCell, Runner}
-import pl.edu.agh.xinuk.algorithm.WorldCreator
+import pl.edu.agh.xinuk.algorithm.{Vec2, WorldCreator}
 import pl.edu.agh.xinuk.config.Obstacle
 import pl.edu.agh.xinuk.model.continuous._
 import pl.edu.agh.xinuk.model.grid.GridDirection.{Bottom, BottomLeft, BottomRight, Left, Right, Top, TopLeft, TopRight}

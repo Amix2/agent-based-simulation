@@ -40,7 +40,6 @@ object ContinuousEnvMain extends LazyLogging {
     var y = continuousEnvCell.gridMultiCellId.y
 //    var x = continuousEnvCell.BaseCoordinates.x
 //    var y = continuousEnvCell.BaseCoordinates.y
-    var si = 10.1;
     //return new Color((x*si).toInt,(y*si).toInt,0)
 
     var count = 0;
@@ -52,10 +51,11 @@ object ContinuousEnvMain extends LazyLogging {
       count += 1;
     }
     })
-    var sum = 8;
+    var sum = 10;
     var co = Math.min((maxVal.intValue() % sum) * 255/sum, 255);
     var co2 = Math.min(((maxVal.intValue() +sum/2) % sum) * 255/sum, 255);
-    return new Color(0, co2,(co).toInt)
+    var co3 = Math.max(((maxVal.intValue() -sum) % sum) * 255/sum, 0);
+    return new Color(0, co3,(co).toInt)
     if (continuousEnvCell.initialSignal.value > 0) {
       Color.BLUE
     } else if (continuousEnvCell.visited) {

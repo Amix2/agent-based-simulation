@@ -37,6 +37,7 @@ case class ObstacleMessage(distanceToLive : Double, xs: Array[Int], ys: Array[In
 
 final case class Signal(value: Double, objectMessages: Map[UUID, ObjectMessage])  {
   def RemoveExpiredMessages(): Signal = {
+    //println(objectMessages.size)
     Signal(this.value, objectMessages.filter(objMsg => objMsg._2.IsValid()))
   }
 
@@ -51,9 +52,31 @@ final case class Signal(value: Double, objectMessages: Map[UUID, ObjectMessage])
 
   def CombineAgentSignal(signalA : Map[UUID, ObjectMessage], signalB : Map[UUID, ObjectMessage]): Map[UUID, ObjectMessage] =
   {
-    val merged = signalA.toSeq ++ signalB.toSeq
-    val grouped = merged.groupBy(_._1)
-    return grouped.map({ case (key, value) => (key, value.map(T => T._2).max) })
+    signalA.foldLeft(signalB) {
+      case (mergedMap, (id, sig)) =>
+        mergedMap.get(id) match {
+          case Some(otherSig) if sig.GetDistanceToLive() < otherSig.GetDistanceToLive() =>
+            mergedMap
+          case _ =>
+            mergedMap.updated(id, sig)
+        }
+    }
+//    var summedMap = scala.collection.mutable.Map[UUID, ObjectMessage]()
+//    signalA.foreach({ case (id, sig) =>
+//    {
+//      if(! signalB.contains(id) || sig.GetDistanceToLive() >= signalB(id).GetDistanceToLive())
+//          summedMap.addOne(id -> sig);
+//    }
+//    });
+//    signalB.foreach({ case (id, sig) => {
+//      if (!signalA.contains(id) || sig.GetDistanceToLive() > signalA(id).GetDistanceToLive())
+//        summedMap.addOne(id -> sig);
+//    }
+//    });
+//    return summedMap.toMap;
+//    val merged = signalA.toSeq ++ signalB.toSeq
+//    val grouped = merged.groupBy(_._1)
+//    return grouped.map({ case (key, value) => (key, value.map(T => T._2).max) })
   }
   def +(other: Signal): Signal = Signal(value + other.value, CombineAgentSignal(objectMessages, other.objectMessages))
 

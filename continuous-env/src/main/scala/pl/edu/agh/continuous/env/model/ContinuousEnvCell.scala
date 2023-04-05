@@ -12,13 +12,9 @@ import pl.edu.agh.xinuk.model.{CellContents, Signal}
 final case class ContinuousEnvCell(initialSignal: Signal, gridMultiCellId: GridMultiCellId)(implicit config: ContinuousEnvConfig) extends CellContents {
   override def generateSignal(iteration: Long)(implicit config: XinukConfig): Signal =
     { // runners can generate signal in cell they are standing on
-      if(obstacles.length> 0)
-        {
-          obstacles.foreach(obs => println(obs.points))
-        }
       var signals = (List(initialSignal)
         ++ runners.map(r => r.GenerateSignal(iteration * config.deltaTime, this))
-       // ++ obstacles.map(r => r.GenerateSignal(iteration * config.deltaTime))
+        ++ obstacles.map(r => r.GenerateSignal(iteration * config.deltaTime))
         )
         .foldLeft(Signal.zero)(_ + _);
       signals

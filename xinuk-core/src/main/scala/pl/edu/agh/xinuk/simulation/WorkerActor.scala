@@ -68,11 +68,15 @@ class WorkerActor[ConfigType <: XinukConfig](
       context.system.terminate()
 
     case StartIteration(iteration) =>
+      val start = System.nanoTime()
       currentIteration = iteration
       iterationMetrics = emptyMetrics
       val plans: Seq[TargetedPlan] = worldShard.localCellIds.map(worldShard.cells(_)).flatMap(createPlans).toSeq
       distributePlans(currentIteration, plans)
       //Thread.sleep(10);
+      val end = System.nanoTime()
+      val elapsed = (end - start) / 1000000 // elapsed time in milliseconds
+      println(s"$iteration : StartIteration time: $elapsed ms")
 
     case RemotePlans(iteration, remotePlans) =>
       plansStash(iteration) :+= remotePlans
@@ -85,6 +89,7 @@ class WorkerActor[ConfigType <: XinukConfig](
       }
 
     case RemoteConsequences(iteration, remoteConsequences) =>
+      val start = System.nanoTime()
       consequencesStash(iteration) :+= remoteConsequences
       if (consequencesStash(currentIteration).size == worldShard.incomingWorkerNeighbours.size) {
         val consequences: Seq[TargetedStateUpdate] = flatGroup(consequencesStash(currentIteration))(_.target).flatMap(_._2).toSeq
@@ -94,6 +99,9 @@ class WorkerActor[ConfigType <: XinukConfig](
         val signalUpdates = calculateSignalUpdates()
         distributeSignal(currentIteration, signalUpdates)
       }
+      val end = System.nanoTime()
+      val elapsed = (end - start) / 1000000 // elapsed time in milliseconds
+      println(s"$iteration : RemoteConsequences time: $elapsed ms")
 
     case RemoteSignal(iteration, remoteSignalUpdates) =>
       signalUpdatesStash(iteration) :+= remoteSignalUpdates

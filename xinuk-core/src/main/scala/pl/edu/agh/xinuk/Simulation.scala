@@ -51,6 +51,7 @@ class Simulation[ConfigType <: XinukConfig : ValueReader](
         throw new IllegalArgumentException
     }
   }
+
   private val workerRegionRef: ActorRef =
     ClusterSharding(system).start(
       typeName = WorkerActor.Name,

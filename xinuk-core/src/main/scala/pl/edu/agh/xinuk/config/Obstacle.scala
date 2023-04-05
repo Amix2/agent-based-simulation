@@ -3,11 +3,11 @@ package pl.edu.agh.xinuk.config
 import io.jvm.uuid.UUID
 import pl.edu.agh.xinuk.model.{ObstacleMessage, Signal}
 
-case class Obstacle(xs: Array[Int], ys: Array[Int], points: Int) {
+case class Obstacle(xs: Array[Int], ys: Array[Int], points: Int, id: UUID = UUID.random) {
 
-//  def GenerateSignal(currentTime: Double): Signal = {
-//    Signal(0, Map(id -> ObstacleMessage.createNew(xs, ys, points)));
-//  }
+  def GenerateSignal(currentTime: Double): Signal = {
+    Signal(0, Map(id -> ObstacleMessage.createNew(xs, ys, points)));
+  }
 }
 
 case class ObstacleSegment(a: (Int, Int), b: (Int, Int)) {

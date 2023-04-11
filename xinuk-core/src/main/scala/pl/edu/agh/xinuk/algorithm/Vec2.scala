@@ -13,6 +13,10 @@ final case class Vec2(x: Double, y: Double) {
 
   def -(that: Vec2): Vec2 = Vec2(this.x - that.x, this.y - that.y)
 
+  def *(that: Vec2): Vec2 = Vec2(this.x * that.x, this.y * that.y)
+
+  def /(that: Vec2): Vec2 = Vec2(this.x / that.x, this.y / that.y)
+
   def *(a: Double): Vec2 = Vec2(this.x * a, this.y * a)
 
   def /(a: Double): Vec2 = Vec2(this.x / a, this.y / a)

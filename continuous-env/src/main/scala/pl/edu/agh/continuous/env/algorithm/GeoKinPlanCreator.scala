@@ -154,8 +154,6 @@ final case class GeoKinPlanCreator() extends PlanCreator[ContinuousEnvConfig] {
       case _ => (List.empty[AgentMessage], List.empty[ObstacleMessage])
     }
 
-    println(agentMessages.size, obstacleMessages.size)
-
     agentMessages.foreach({ case (sig) => {
       agentGeomCenter = agentGeomCenter + Vec2(sig.posX, sig.posY)
       count += 1;

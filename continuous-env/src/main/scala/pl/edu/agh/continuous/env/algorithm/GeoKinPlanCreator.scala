@@ -148,18 +148,15 @@ final case class GeoKinPlanCreator() extends PlanCreator[ContinuousEnvConfig] {
 
     var agentGeomCenter = Vec2(0, 0);
     var count = 0;
-    var objMessages = signalMap.toObjectMessages;
-    var AgentMessageList : List[AgentMessage] = List();
 
-    objMessages.foreach({ case (id, msg) => {
-      msg match {
-        case AgentMessage(_,_,_,_,_) => AgentMessageList.appended(msg)
-        case _ => {}
-      }
+    val (agentMessages, obstacleMessages) = signalMap.toObjectMessagesSplit match {
+      case (agents, obstacles) => (agents, obstacles)
+      case _ => (List.empty[AgentMessage], List.empty[ObstacleMessage])
     }
-    })
 
-    AgentMessageList.foreach({ case (sig) => {
+    println(agentMessages.size, obstacleMessages.size)
+
+    agentMessages.foreach({ case (sig) => {
       agentGeomCenter = agentGeomCenter + Vec2(sig.posX, sig.posY)
       count += 1;
     }})

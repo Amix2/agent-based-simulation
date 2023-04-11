@@ -5,7 +5,7 @@ import pl.edu.agh.continuous.env.algorithm.{ContinuousEnvMetrics, ContinuousEnvW
 import pl.edu.agh.continuous.env.common.ToVec2Conversions.SignalMapConversionExtensions
 import pl.edu.agh.continuous.env.model.ContinuousEnvCell
 import pl.edu.agh.xinuk.Simulation
-import pl.edu.agh.xinuk.model.{CellState, Signal}
+import pl.edu.agh.xinuk.model.{AgentMessage, CellState, ObstacleMessage, Signal}
 import pl.edu.agh.xinuk.model.grid.GridSignalPropagation
 
 import java.awt.Color
@@ -35,15 +35,28 @@ object ContinuousEnvMain extends LazyLogging {
       }
   }
 
+  def ToColor(value: Double, sum: Int): Color =
+  {
+    var red =  if(value > sum) 255 else (value / sum) * 255;
+    var green = if(value <= sum) 0 else if(value - sum > sum) 255 else ((value- sum) / sum) * 255;
+    var blue =  if(value <= 2*sum) 0 else if(value - 2*sum > sum) 255 else ((value- 2*sum) / sum) * 255;
+    new Color(red.intValue(), green.intValue(), blue.intValue());
+  }
+
+
   private def cellToColorSign(cellState: CellState, continuousEnvCell: ContinuousEnvCell): Color = {
     var x = continuousEnvCell.gridMultiCellId.x
     var y = continuousEnvCell.gridMultiCellId.y
 //    var x = continuousEnvCell.BaseCoordinates.x
 //    var y = continuousEnvCell.BaseCoordinates.y
     //return new Color((x*si).toInt,(y*si).toInt,0)
-
     var count = 0;
     var maxVal = 0.0;
+
+    val (agentMessages, obstacleMessages) = cellState.signalMap.toObjectMessagesSplit match {
+      case (agents, obstacles) => (agents, obstacles)
+      case _ => (List.empty[AgentMessage], List.empty[ObstacleMessage])
+    }
 
     var messages = cellState.signalMap.toObjectMessages;
     messages.foreach({ case (id, sig) => {
@@ -51,11 +64,10 @@ object ContinuousEnvMain extends LazyLogging {
       count += 1;
     }
     })
-    var sum = 10;
-    var co = Math.min((maxVal.intValue() % sum) * 255/sum, 255);
-    var co2 = Math.min(((maxVal.intValue() +sum/2) % sum) * 255/sum, 255);
-    var co3 = Math.max(((maxVal.intValue() -sum) % sum) * 255/sum, 0);
-    return new Color(0, co3,(co).toInt)
+    var sum = 3;
+    //if (x == 1 && y == 12)
+      //return new Color(0, 255, 255);
+    return ToColor(count, sum)
     if (continuousEnvCell.initialSignal.value > 0) {
       Color.BLUE
     } else if (continuousEnvCell.visited) {

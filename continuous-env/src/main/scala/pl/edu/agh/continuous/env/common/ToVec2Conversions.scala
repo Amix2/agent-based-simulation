@@ -4,7 +4,7 @@ import io.jvm.uuid.UUID
 import pl.edu.agh.xinuk.algorithm.Vec2
 import pl.edu.agh.xinuk.model.SignalMap.signalMap2Map
 import pl.edu.agh.xinuk.model.grid.GridDirection
-import pl.edu.agh.xinuk.model.{AgentMessage, Direction, ObjectMessage, Signal, SignalMap}
+import pl.edu.agh.xinuk.model.{AgentMessage, Direction, ObjectMessage, ObstacleMessage, Signal, SignalMap}
 
 import scala.language.implicitConversions
 
@@ -60,8 +60,17 @@ object ToVec2Conversions {
       .fold(Vec2.zero)((v1: Vec2, v2: Vec2) => v1 + v2)
 
     def toObjectMessages: Map[UUID, ObjectMessage] = signalMap2Map(signalMap)
-        .values
-        .foldLeft(Signal.zero)(_ + _).objectMessages
-  }
+      .values
+      .foldLeft(Signal.zero)(_ + _).objectMessages
 
+    def toObjectMessagesSplit: (List[AgentMessage], List[ObstacleMessage]) = {
+      toObjectMessages.foldLeft((List.empty[AgentMessage], List.empty[ObstacleMessage])) { case ((agents, obstacles), (_, msg)) =>
+        msg match {
+          case agent: AgentMessage => (agent :: agents, obstacles)
+          case obstacle: ObstacleMessage => (agents, obstacle :: obstacles)
+          case _ => (agents, obstacles)
+        }
+      }
+    }
+  }
 }

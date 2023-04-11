@@ -10,7 +10,7 @@ object AgentMessage {
 }
 
 object ObstacleMessage {
-  def createNew(xs: Array[Int], ys: Array[Int], points: Int)  = new ObstacleMessage(8, xs, ys, points)
+  def createNew(xs: Array[Int], ys: Array[Int], points: Int)  = new ObstacleMessage(9, xs, ys, points)
 }
 
 trait ObjectMessage extends Ordered[ObjectMessage]

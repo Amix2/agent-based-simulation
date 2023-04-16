@@ -32,7 +32,7 @@ final case class ContinuousEnvCell(initialSignal: Signal, gridMultiCellId: GridM
     cellOutline.width * cellOutline.height
 
   private def totalRunnersField: Double = runners.map(_.fakeMass).sum
-  def BaseCoordinates: Vec2 = Vec2(gridMultiCellId.y * cellOutline.width, gridMultiCellId.x * cellOutline.height);
+  def BaseCoordinates(config: XinukConfig): Vec2 = Vec2(gridMultiCellId.y * cellOutline.width, (config.worldHeight - gridMultiCellId.x) * cellOutline.height);
 
   var cellOutline: CellOutline = CellOutline.default()
   var neighbourhood: Neighbourhood = Neighbourhood.empty()

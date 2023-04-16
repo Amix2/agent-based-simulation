@@ -37,9 +37,11 @@ object ContinuousEnvMain extends LazyLogging {
 
   def ToColor(value: Double, sum: Int): Color =
   {
-    var red =  if(value > sum) 255 else (value / sum) * 255;
-    var green = if(value <= sum) 0 else if(value - sum > sum) 255 else ((value- sum) / sum) * 255;
-    var blue =  if(value <= 2*sum) 0 else if(value - 2*sum > sum) 255 else ((value- 2*sum) / sum) * 255;
+    if(value == 0)
+      return new Color(0, 100, 200);
+    val red =  if(value > sum) 255 else (value / sum) * 255;
+    val green = if(value <= sum) 0 else if(value - sum > sum) 255 else ((value- sum) / sum) * 255;
+    val blue =  if(value <= 2*sum) 0 else if(value - 2*sum > sum) 255 else ((value- 2*sum) / sum) * 255;
     new Color(red.intValue(), green.intValue(), blue.intValue());
   }
 

@@ -84,7 +84,9 @@ final case class GeoKinPlanCreator() extends PlanCreator[ContinuousEnvConfig] {
       if (bodiesIntersect) {
         //reportDiagnostics(RunnerInCollisionDiagnostic(r1))
         //reportDiagnostics(RunnerInCollisionDiagnostic(r2))
-        throw new IllegalStateException(s"Iteration[$iteration] Cell(${cellId.x}, ${cellId.y}) " +
+       // throw new IllegalStateException(s"Iteration[$iteration] Cell(${cellId.x}, ${cellId.y}) " +
+       //   s"Runners $r1 and $r2 collide with each other!")
+        println(s"Iteration[$iteration] Cell(${cellId.x}, ${cellId.y}) " +
           s"Runners $r1 and $r2 collide with each other!")
       }
     }
@@ -98,19 +100,30 @@ final case class GeoKinPlanCreator() extends PlanCreator[ContinuousEnvConfig] {
                                    config: ContinuousEnvConfig): Plans = {
 
     val runnersWithAdjustedVelocity = cell.runners.toSet
-      //.map(runner => runner.withClearedForce) // zero force
-      .map(runner => SignalForceCalculator.adjustVelocityForRunner( // force
+      .map(runner => beforeStepForRunner( // zero force
+          runner,
+          signalMap,
+          cell,
+          neighbourContents,
+          config))
+//      .map(runner => SignalForceCalculator.adjustVelocityForRunner( // force
+//        runner,
+//        signalMap,
+//        cell,
+//        neighbourContents,
+//        config))
+      .map(runner => adjustSocialForceForRunner( // force
         runner,
         signalMap,
         cell,
         neighbourContents,
         config))
-      .map(runner => adjustSocialForceForRunner(  // force
-        runner,
-        signalMap,
-        cell,
-        neighbourContents,
-        config))
+//      .map(runner => SphForceCalculator.adjustSphForRunner(  // sph force
+//        runner,
+//        signalMap,
+//        cell,
+//        neighbourContents,
+//        config))
       .map(runner => endStepRunnerUpdate( // doesnt matter
         runner,
         signalMap,
@@ -126,26 +139,38 @@ final case class GeoKinPlanCreator() extends PlanCreator[ContinuousEnvConfig] {
         cell,
         allReachableRunners - runner,
         config))
-      .map(runner => RepellingForceCalculator.adjustNextStepWithRepellingForceFromObstacles(
-        runner,
-        cell,
-        neighbourContents,
-        config))
-      .map(runner => StepAdjustmentCalculator.adjustNextStepToObstaclesAndRunners(
-        runner,
-        neighbourContents,
-        cell,
-        allReachableRunners - runner,
-        config))
+//      .map(runner => RepellingForceCalculator.adjustNextStepWithRepellingForceFromObstacles(  // force ?
+//        runner,
+//        cell,
+//        neighbourContents,
+//        config))
+//      .map(runner => applyForceForRunner( // force -> velocity, next step
+//        runner,
+//        config))
+//      .map(runner => StepAdjustmentCalculator.adjustNextStepToObstaclesAndRunners(
+//        runner,
+//        neighbourContents,
+//        cell,
+//        allReachableRunners - runner,
+//        config))
     new Plans(Map.empty, Seq(Plan(StateUpdate(RunnerOccupied(cell.generation + 1, runnersWithAdjustedVelocity)))))
   }
 
-  def adjustSocialForceForRunner(runner: Runner,
+  def beforeStepForRunner(runner: Runner,
                                  signalMap: SignalMap,
                                  cell: ContinuousEnvCell,
                                  neighbourContents: Map[(ContinuousEnvCell, UUID), Direction],
                                  config: ContinuousEnvConfig): Runner = {
 
+    return runner.withClearedForce();
+
+  }
+  def adjustSocialForceForRunner(runner: Runner,
+                                 signalMap: SignalMap,
+                                 cell: ContinuousEnvCell,
+                                 neighbourContents: Map[(ContinuousEnvCell, UUID), Direction],
+                                 config: ContinuousEnvConfig): Runner = {
+    return runner.withIncreasedForce(Vec2(0,- 100000000));
     var agentGeomCenter = Vec2(0, 0);
     var count = 0;
 
@@ -155,7 +180,7 @@ final case class GeoKinPlanCreator() extends PlanCreator[ContinuousEnvConfig] {
     }
 
     agentMessages.foreach({ case (sig) => {
-      agentGeomCenter = agentGeomCenter + Vec2(sig.posX, sig.posY)
+      agentGeomCenter = agentGeomCenter + sig.pos
       count += 1;
     }})
 
@@ -164,15 +189,15 @@ final case class GeoKinPlanCreator() extends PlanCreator[ContinuousEnvConfig] {
 
     agentGeomCenter = agentGeomCenter / count;
    // agentGeomCenter = Vec2(835.0,815.0);  // 635.0,515.0
-    var runnerGlobalPos = runner.positionInCell + cell.BaseCoordinates;
+    var runnerGlobalPos = runner.positionInCell + cell.BaseCoordinates(config);
     var dir = agentGeomCenter - runnerGlobalPos;
     if(dir.lengthSq == 0)
       return runner;
     dir = dir.normalized
 
     var swappedDir = Vec2(dir.y, dir.x);
-    var fixedDir = Vec2(dir.x, -dir.y);
-    var force = fixedDir*50000.1;
+    var fixedDir = Vec2(dir.x, dir.y);
+    var force = fixedDir*5000.1;
     //force = Vec2(0.0,0);
     var out = runner.withIncreasedForce(force)
     return out;

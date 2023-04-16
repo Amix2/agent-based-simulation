@@ -165,6 +165,13 @@ private[gui] class GuiGrid(worldSpan: ((Int, Int), (Int, Int)), cellToColor: Par
         case Cell(GridMultiCellId(x, y, _), state) =>
           setGridCellColor(x, y, state)
           if (state.contents.coordinates.nonEmpty) {
+           // setColorsForAgents(x, y, state)
+          }
+        case _ =>
+      }
+      cells.foreach {
+        case Cell(GridMultiCellId(x, y, _), state) =>
+          if (state.contents.coordinates.nonEmpty) {
             setColorsForAgents(x, y, state)
           }
         case _ =>

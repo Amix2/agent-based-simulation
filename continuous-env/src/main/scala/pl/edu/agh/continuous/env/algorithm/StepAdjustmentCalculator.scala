@@ -25,7 +25,7 @@ object StepAdjustmentCalculator {
                                                   currentCell: ContinuousEnvCell,
                                                   allReachableRunners: Set[Runner],
                                                   config: ContinuousEnvConfig): Runner = {
-    val inflatedRunners = Helper.inflateRunners(allReachableRunners.toSeq)
+    val inflatedRunners : Seq[Runner] = Helper.inflateRunners(allReachableRunners.toSeq)
 
     val moveCompletionConsideringObstacles =
       Helper.tryGetMaxMoveCompletionOrMin(() =>

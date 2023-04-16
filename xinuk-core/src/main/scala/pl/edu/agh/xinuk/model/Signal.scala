@@ -1,16 +1,17 @@
 package pl.edu.agh.xinuk.model
 
 import io.jvm.uuid.UUID
+import pl.edu.agh.xinuk.algorithm.Vec2
 import pl.edu.agh.xinuk.config.XinukConfig
 
 import scala.math.sqrt
 
 object AgentMessage {
-  def createNew(posX: Double, posY: Double)  = new AgentMessage(1, 8, 50.8, posX, posY)
+  def createNew(pos: Vec2, vel: Vec2, mass: Double, sphData: SphObjectData)  = new AgentMessage(5, pos, vel, mass, sphData)
 }
 
 object ObstacleMessage {
-  def createNew(xs: Array[Int], ys: Array[Int], points: Int)  = new ObstacleMessage(9, xs, ys, points)
+  def createNew(xs: Array[Int], ys: Array[Int], points: Int)  = new ObstacleMessage(1, xs, ys, points)
 }
 
 trait ObjectMessage extends Ordered[ObjectMessage]
@@ -21,11 +22,11 @@ trait ObjectMessage extends Ordered[ObjectMessage]
   def IsValid(): Boolean = GetDistanceToLive() > 0;
 }
 
-case class AgentMessage(smell: Double, distanceToLive : Double, timeToLive: Double, posX: Double, posY: Double) extends ObjectMessage
+case class AgentMessage(distanceToLive : Double, pos: Vec2, vel: Vec2, mass: Double, sphData: SphObjectData) extends ObjectMessage
 {
   override def GetDistanceToLive(): Double = distanceToLive
 
-  override def DecreaseDistanceToLive(value: Double): AgentMessage = AgentMessage(smell, distanceToLive-value, timeToLive, posX, posY);
+  override def DecreaseDistanceToLive(value: Double): AgentMessage = AgentMessage(distanceToLive-value, pos, vel, mass, sphData);
 }
 
 case class ObstacleMessage(distanceToLive : Double, xs: Array[Int], ys: Array[Int], points: Int) extends ObjectMessage

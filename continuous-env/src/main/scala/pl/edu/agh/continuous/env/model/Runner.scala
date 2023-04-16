@@ -4,10 +4,13 @@ import io.jvm.uuid.UUID
 import pl.edu.agh.continuous.env.common.CellBoundedPosition.PositionExtensions
 import pl.edu.agh.continuous.env.common.geometry.{Circle, SweptCircle}
 import pl.edu.agh.xinuk.algorithm.Vec2
-import pl.edu.agh.xinuk.model.{AgentMessage, Direction, Signal}
+import pl.edu.agh.xinuk.config.XinukConfig
+import pl.edu.agh.xinuk.model.{AgentMessage, Direction, Signal, SphObjectData}
 
 import java.awt.Color
 import scala.util.Random
+
+case class SPHRunnerData(pressure: Double = 0, density: Double = 0)
 
 final case class Runner(id: UUID,
                         generation: Long,
@@ -22,10 +25,14 @@ final case class Runner(id: UUID,
                         color: Color,
                         force: Vec2,  // zeroed before each step,
                         velocity: Vec2,
-                        mass: Double) extends Equals {
+                        mass: Double,
+                        sphData : SphObjectData) extends Equals {
 
-  def GenerateSignal(currentTime : Double, cell : ContinuousEnvCell): Signal = {
-    Signal(0, Map(id -> AgentMessage.createNew(positionInCell.x + cell.BaseCoordinates.x, positionInCell.y + cell.BaseCoordinates.y)));
+  def GenerateSignal(currentTime : Double, cell : ContinuousEnvCell)(implicit config: XinukConfig): Signal = {
+    Signal(0, Map(id -> AgentMessage.createNew(
+      Vec2(positionInCell.x + cell.BaseCoordinates(config).x, positionInCell.y + cell.BaseCoordinates(config).y)
+      , velocity
+      , trueMass, sphData)));
   }
   def body: Circle = Circle(positionInCell, radius)
 
@@ -44,7 +51,7 @@ final case class Runner(id: UUID,
   def lastActualStep: Option[Vec2] = lastMoveCompletion.map(lmc => nextStep * lmc.value)
   def trueMass: Double = 80 // [kg]
   def maxSpeed: Double = 100 // [cm / s]
-  def legForce: Double = trueMass * maxSpeed * maxSpeed / (2 * 100)*100 // reach maxSpeed in 1m = 100cm
+  def legForce: Double = trueMass * maxSpeed * maxSpeed / (2 * 100) // reach maxSpeed in 1m = 100cm
 
   def completeMove(moveCompletion: MoveCompletion): Runner = Runner(
     id,
@@ -60,7 +67,8 @@ final case class Runner(id: UUID,
     color,
     force,
     velocity,
-    mass
+    mass,
+    sphData
   )
 
   def withNewPriority(): Runner = Runner(
@@ -77,7 +85,8 @@ final case class Runner(id: UUID,
     color,
     force,
     velocity,
-    mass
+    mass,
+    sphData
   )
 
   def withReducedNextStep(reducedNextStep: Vec2, dt: Double): Runner =
@@ -85,23 +94,24 @@ final case class Runner(id: UUID,
       if(reducedNextStep.lengthSq > nextStep.lengthSq)
       {
         val step = reducedNextStep.normalized * nextStep.length
-        return Runner(id, generation, priority, positionInCell, radius, step, path, speed, None, isStuck, color, force, velocity, mass)
+        return Runner(id, generation, priority, positionInCell, radius, step, path, speed, None, isStuck, color, force, velocity, mass, sphData)
       }
       // v = s / dt
       var newV = reducedNextStep / dt
       if(newV.lengthSq > velocity.lengthSq)
         newV = newV.normalized * velocity.length;
-      return Runner(id, generation, priority, positionInCell, radius, reducedNextStep, path, speed, None, isStuck, color, force, newV, mass)
+      return Runner(id, generation, priority, positionInCell, radius, reducedNextStep, path, speed, None, isStuck, color, force, newV, mass, sphData)
     }
-  def withNextStep(nextStep: Vec2, newVelocity: Vec2): Runner = Runner(id, generation, priority, positionInCell, radius, nextStep, path, speed, None, isStuck, color, force, newVelocity, mass)
-  def withClearedForce(): Runner = Runner(id, generation, priority, positionInCell, radius, nextStep, path, speed, None, isStuck, color, Vec2.zero, velocity, mass)
-  def withIncreasedForce(increaseForce: Vec2): Runner = Runner(id, generation, priority, positionInCell, radius, nextStep, path, speed, None, isStuck, color, force + increaseForce, velocity, mass)
+  def withNextStep(nextStep: Vec2, newVelocity: Vec2): Runner = Runner(id, generation, priority, positionInCell, radius, nextStep, path, speed, None, isStuck, color, force, newVelocity, mass, sphData)
+  def withClearedForce(): Runner = Runner(id, generation, priority, positionInCell, radius, nextStep, path, speed, None, isStuck, color, Vec2.zero, velocity, mass, sphData)
+  def withIncreasedForce(increaseForce: Vec2): Runner = Runner(id, generation, priority, positionInCell, radius, nextStep, path, speed, None, isStuck, color, force + increaseForce, velocity, mass, sphData)
+  def withNewSphData(sphData : SphObjectData): Runner = Runner(id, generation, priority, positionInCell, radius, nextStep, path, speed, None, isStuck, color, force, velocity, mass, sphData)
 
   def withAdjustedPosition(cellSize: Double,
                            direction: Direction): Runner = {
     val newPosition = positionInCell.cellBounded(cellSize, false).adjust(direction, false)
 
-    Runner(id, generation, priority, newPosition, radius, nextStep, path, speed, lastMoveCompletion, isStuck, color, force, velocity, mass)
+    Runner(id, generation, priority, newPosition, radius, nextStep, path, speed, lastMoveCompletion, isStuck, color, force, velocity, mass, sphData)
   }
 
   def withIncrementedGeneration(): Runner = Runner(
@@ -118,12 +128,13 @@ final case class Runner(id: UUID,
     color,
     force,
     velocity,
-    mass
+    mass,
+    sphData
   )
 
   def normalizePosition(cellSize: Double): (Runner, Option[Direction]) = {
     val (newPosition, maybeDirection) = positionInCell.cellBounded(cellSize, false).normalize
-    (Runner(id, generation, priority, newPosition, radius, nextStep, path, speed, lastMoveCompletion, isStuck, color, force, velocity, mass), maybeDirection)
+    (Runner(id, generation, priority, newPosition, radius, nextStep, path, speed, lastMoveCompletion, isStuck, color, force, velocity, mass, sphData), maybeDirection)
   }
 
   def inflate(radiusDelta: Double): Runner = Runner(
@@ -140,7 +151,8 @@ final case class Runner(id: UUID,
     color,
     force,
     velocity,
-    mass
+    mass,
+    sphData
   )
 
   override def canEqual(that: Any): Boolean = that.isInstanceOf[Runner]
@@ -172,7 +184,8 @@ object Runner {
             color: Color,
             force: Vec2,
             velocity: Vec2,
-            mass: Double): Runner =
+            mass: Double,
+            sphData: SphObjectData): Runner =
     new Runner(
       id,
       generation,
@@ -187,7 +200,8 @@ object Runner {
       color,
       force,
       velocity,
-      mass)
+      mass,
+      sphData)
 
 //  def createNew(position: Vec2,
 //                radius: Double,
@@ -243,7 +257,8 @@ object Runner {
       color,
       Vec2.zero,
       Vec2.zero,
-      0)
+      0,
+      SphObjectData())
 
   def createNewMock(sweptCircle: SweptCircle,
                     speed: Double,
@@ -262,5 +277,6 @@ object Runner {
       color,
       Vec2.zero,
       Vec2.zero,
-      0)
+      0,
+      SphObjectData())
 }

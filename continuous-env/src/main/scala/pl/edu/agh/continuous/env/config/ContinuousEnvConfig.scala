@@ -3,6 +3,11 @@ package pl.edu.agh.continuous.env.config
 import pl.edu.agh.xinuk.config.{Obstacle, GuiType, XinukConfig}
 import pl.edu.agh.xinuk.model.{Signal, WorldType}
 
+case class SphConfig(targetDensity: Double = 300
+                     , stiffness: Double = 10000
+                     , viscosity: Double = 5000
+                     , kernelSize: Double = 1.5)
+
 final case class ContinuousEnvConfig(
                                 worldType: WorldType,
                                 worldWidth: Int,
@@ -31,5 +36,7 @@ final case class ContinuousEnvConfig(
 
                                 maxAgentRadius: Double,
 
-                                obstacles: List[Obstacle]
+                                obstacles: List[Obstacle],
+
+                                sphConfig: SphConfig
                               ) extends XinukConfig

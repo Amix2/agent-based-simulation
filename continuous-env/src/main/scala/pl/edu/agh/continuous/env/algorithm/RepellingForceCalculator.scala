@@ -48,14 +48,14 @@ object RepellingForceCalculator {
         case _ => throw new UnsupportedOperationException("Unknown direction")
       }).fold(Vec2.zero)((v1: Vec2, v2: Vec2) => v1 + v2)
 
-      val repellingForceFactor = 1.0
+      val repellingForceFactor = 100000000.0
       val repellingForce = repellingForceBase * repellingForceFactor
 
-      runner.withIncreasedForce(repellingForce)
-      //      runner.withAppliedForceConstrainedNoMin(
-      //        repellingForce,
-      //        config.personUnitAcceleration,
-      //        config.cellSize)
+      runner.withClearedForce().withIncreasedForce(repellingForce)
+//            runner.withAppliedForceConstrainedNoMin(
+//              repellingForce,
+//              config.personUnitAcceleration,
+//              config.cellSize)
     }
   }
   def getObstacleDirection(line: Line, position: Vec2, minDistance: Double): GridDirection = {

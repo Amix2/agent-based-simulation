@@ -64,7 +64,7 @@ class WorkerActor[ConfigType <: XinukConfig](
       planCreator.finalize(worldShard)
       logger.info("terminating")
       import scala.concurrent.duration._
-      Thread.sleep(5.seconds.toMillis)
+      //Thread.sleep(5.seconds.toMillis)
       context.system.terminate()
 
     case StartIteration(iteration) =>
@@ -76,7 +76,7 @@ class WorkerActor[ConfigType <: XinukConfig](
       //Thread.sleep(10);
       val end = System.nanoTime()
       val elapsed = (end - start) / 1000000 // elapsed time in milliseconds
-      println(s"$iteration : StartIteration time: $elapsed ms")
+      //println(s"$iteration : StartIteration time: $elapsed ms")
 
     case RemotePlans(iteration, remotePlans) =>
       plansStash(iteration) :+= remotePlans
@@ -101,7 +101,7 @@ class WorkerActor[ConfigType <: XinukConfig](
       }
       val end = System.nanoTime()
       val elapsed = (end - start) / 1000000 // elapsed time in milliseconds
-      println(s"$iteration : RemoteConsequences time: $elapsed ms")
+      //println(s"$iteration : RemoteConsequences time: $elapsed ms")
 
     case RemoteSignal(iteration, remoteSignalUpdates) =>
       signalUpdatesStash(iteration) :+= remoteSignalUpdates

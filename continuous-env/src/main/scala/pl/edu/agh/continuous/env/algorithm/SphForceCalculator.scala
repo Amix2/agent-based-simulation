@@ -32,7 +32,7 @@ object SphForceCalculator {
     }
 
     var myDensity: Double = 0;
-    val myPos = runner.positionInCell + cell.BaseCoordinates(config);
+    val myPos = runner.globalCellPosition(config) + cell.BaseCoordinates(config);
     val myVel = runner.velocity;
 
     agentMessages.foreach((msg =>
@@ -59,7 +59,7 @@ object SphForceCalculator {
     })
     val force = myForceViscosity - myForcePressure;
     //println(force)
-    return runner.withNewSphData(SphObjectData(myPressure, myDensity)).withIncreasedForce(force)
+    return runner.withNewSphData(SphObjectData(myPressure, myDensity)).withIncreasedForce(Vec2(force.x, -force.y))
   }
 
   def kernel(x: Double, h: Double): Double = {

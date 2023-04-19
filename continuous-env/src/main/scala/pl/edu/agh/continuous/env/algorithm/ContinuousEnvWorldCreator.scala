@@ -123,11 +123,11 @@ object ContinuousEnvWorldCreator extends WorldCreator[ContinuousEnvConfig] {
      // RunnerDefinition(535, 655, 10, 23),
     );
 
-    var base : Vec2  = new Vec2(535, 1215);
+    var base : Vec2  = new Vec2(735, 715);
     var step : Vec2  = new Vec2(80, 80);
 
-    for(x <- 0 to 0)
-      for(y <- 0 to 0)
+    for(x <- 0 to 10)
+      for(y <- 0 to 10)
       {
         var pos = base + step * new Vec2(x.doubleValue, y.doubleValue);
         var rad = scala.util.Random.nextFloat() * 10 + 10;

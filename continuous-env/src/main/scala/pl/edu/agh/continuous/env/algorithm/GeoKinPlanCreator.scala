@@ -118,12 +118,12 @@ final case class GeoKinPlanCreator() extends PlanCreator[ContinuousEnvConfig] {
         cell,
         neighbourContents,
         config))
-//      .map(runner => SphForceCalculator.adjustSphForRunner(  // sph force
-//        runner,
-//        signalMap,
-//        cell,
-//        neighbourContents,
-//        config))
+      .map(runner => SphForceCalculator.adjustSphForRunner(  // sph force
+        runner,
+        signalMap,
+        cell,
+        neighbourContents,
+        config))
       .map(runner => endStepRunnerUpdate( // doesnt matter
         runner,
         signalMap,
@@ -170,7 +170,7 @@ final case class GeoKinPlanCreator() extends PlanCreator[ContinuousEnvConfig] {
                                  cell: ContinuousEnvCell,
                                  neighbourContents: Map[(ContinuousEnvCell, UUID), Direction],
                                  config: ContinuousEnvConfig): Runner = {
-    return runner.withIncreasedForce(Vec2(0,- 100000000));
+    //return runner.withIncreasedForce(Vec2(0,- 1000));
     var agentGeomCenter = Vec2(0, 0);
     var count = 0;
 
@@ -189,14 +189,14 @@ final case class GeoKinPlanCreator() extends PlanCreator[ContinuousEnvConfig] {
 
     agentGeomCenter = agentGeomCenter / count;
    // agentGeomCenter = Vec2(835.0,815.0);  // 635.0,515.0
-    var runnerGlobalPos = runner.positionInCell + cell.BaseCoordinates(config);
+    var runnerGlobalPos = runner.globalCellPosition(config) + cell.BaseCoordinates(config);
     var dir = agentGeomCenter - runnerGlobalPos;
     if(dir.lengthSq == 0)
       return runner;
     dir = dir.normalized
 
     var swappedDir = Vec2(dir.y, dir.x);
-    var fixedDir = Vec2(dir.x, dir.y);
+    var fixedDir = Vec2(dir.x, -dir.y);
     var force = fixedDir*5000.1;
     //force = Vec2(0.0,0);
     var out = runner.withIncreasedForce(force)

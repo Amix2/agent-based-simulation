@@ -30,7 +30,7 @@ final case class Runner(id: UUID,
 
   def GenerateSignal(currentTime : Double, cell : ContinuousEnvCell)(implicit config: XinukConfig): Signal = {
     Signal(0, Map(id -> AgentMessage.createNew(
-      Vec2(positionInCell.x + cell.BaseCoordinates(config).x, positionInCell.y + cell.BaseCoordinates(config).y)
+      Vec2(globalCellPosition(config).x + cell.BaseCoordinates(config).x, globalCellPosition(config).y + cell.BaseCoordinates(config).y)
       , velocity
       , trueMass, sphData)));
   }
@@ -45,13 +45,14 @@ final case class Runner(id: UUID,
   def endPosition(moveCompletion: MoveCompletion): Vec2 = positionInCell + (nextStep * moveCompletion.value)
 
   def endPosition: Vec2 = positionInCell + nextStep
+  def globalCellPosition(config: XinukConfig): Vec2 = Vec2(positionInCell.x, config.cellSize - positionInCell.y)
 
   def maxStepLength(cellSize: Double): Double = cellSize * 0.5 - body.r //this was diameter but should be radius
 
   def lastActualStep: Option[Vec2] = lastMoveCompletion.map(lmc => nextStep * lmc.value)
   def trueMass: Double = 80 // [kg]
   def maxSpeed: Double = 100 // [cm / s]
-  def legForce: Double = trueMass * maxSpeed * maxSpeed / (2 * 100) // reach maxSpeed in 1m = 100cm
+  def legForce: Double = trueMass * maxSpeed * maxSpeed / (2 * 100)*10000 // reach maxSpeed in 1m = 100cm
 
   def completeMove(moveCompletion: MoveCompletion): Runner = Runner(
     id,

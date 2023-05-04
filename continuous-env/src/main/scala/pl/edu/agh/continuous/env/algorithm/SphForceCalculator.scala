@@ -7,7 +7,7 @@ import pl.edu.agh.continuous.env.common.ObstacleMapping
 import pl.edu.agh.continuous.env.common.RunnerPhysics.RunnerExtensions
 import pl.edu.agh.continuous.env.common.ToVec2Conversions.SignalMapConversionExtensions
 import pl.edu.agh.continuous.env.common.geometry.Algorithms.{LineIntersection, intersect}
-import pl.edu.agh.continuous.env.common.geometry.Line
+import pl.edu.agh.continuous.env.common.geometry.{ClosestPointInPolygon, Line}
 import pl.edu.agh.continuous.env.config.ContinuousEnvConfig
 import pl.edu.agh.continuous.env.model.{ContinuousEnvCell, MoveCompletion, Runner, RunnerOccupied}
 import pl.edu.agh.xinuk.algorithm.{Plan, PlanCreator, Plans, StateUpdate, Vec2}
@@ -26,10 +26,12 @@ object SphForceCalculator {
                          neighbourContents: Map[(ContinuousEnvCell, UUID), Direction],
                          config: ContinuousEnvConfig): Runner = {
 
-    val (agentMessages, _) = signalMap.toObjectMessagesSplit match {
+    val (agentMessages, obstacleMessages) = signalMap.toObjectMessagesSplit match {
       case (agents, obstacles) => (agents, obstacles)
       case _ => (List.empty[AgentMessage], List.empty[ObstacleMessage])
     }
+
+    val obstaclePolygons : List[List[Vec2]] = obstacleMessages.map(msg => msg.ToVec2List);
 
     var myDensity: Double = 0;
     val myPos = runner.globalCellPosition(config) + cell.BaseCoordinates(config);
@@ -57,6 +59,12 @@ object SphForceCalculator {
         }
       }
     })
+  println(obstaclePolygons);
+    if(obstaclePolygons.nonEmpty)
+      {
+        val wallPoint = ClosestPointInPolygon.closestPointInPolygons(myPos, obstaclePolygons);
+       // println(wallPoint)
+      }
     val force = myForceViscosity - myForcePressure;
     //println(force)
     return runner.withNewSphData(SphObjectData(myPressure, myDensity)).withIncreasedForce(Vec2(force.x, -force.y))

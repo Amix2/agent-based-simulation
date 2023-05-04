@@ -10,6 +10,8 @@ final case class Line(start: Vec2, end: Vec2) {
   def x2: Double = end.x
 
   def y2: Double = end.y
+  def p1 = start
+  def p2 = end
 
   def A: Double = if (isVertical) 1.0 else -dy / dx
 

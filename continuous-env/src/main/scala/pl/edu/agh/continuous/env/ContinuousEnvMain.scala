@@ -49,6 +49,7 @@ object ContinuousEnvMain extends LazyLogging {
   private def cellToColorSign(cellState: CellState, continuousEnvCell: ContinuousEnvCell): Color = {
     var x = continuousEnvCell.gridMultiCellId.x
     var y = continuousEnvCell.gridMultiCellId.y
+
 //    var x = continuousEnvCell.BaseCoordinates.x
 //    var y = continuousEnvCell.BaseCoordinates.y
     //return new Color((x*si).toInt,(y*si).toInt,0)
@@ -66,6 +67,10 @@ object ContinuousEnvMain extends LazyLogging {
       count += 1;
     }
     })
+    if (x == 10 && y == 1) {
+    }
+    if (x == 1 && y == 10) {
+    }
     var sum = 3;
     //if (x == 1 && y == 12)
       //return new Color(0, 255, 255);

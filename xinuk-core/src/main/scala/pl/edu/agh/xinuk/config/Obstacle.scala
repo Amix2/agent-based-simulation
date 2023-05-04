@@ -5,21 +5,22 @@ import pl.edu.agh.xinuk.model.{ObstacleMessage, Signal}
 
 case class Obstacle(xs: Array[Int], ys: Array[Int], points: Int, xsOrig: Array[Int], ysOrig: Array[Int]) {
 
-  def Hash (x : Int) : Int = {
-    var out = ((x >> 16) ^ (x+1)) * 0x45d9f3b;
+  def Hash(x: Int): Int = {
+    var out = ((x >> 16) ^ (x)) * 0x45d9f3b;
     out = ((out >> 16) ^ out) * 0x45d9f3b;
     out = (out >> 16) ^ out;
     return out;
   }
+
+  def Hash(xs: Array[Int]): Int = {
+    xs.foldLeft(xs.size)((xs, x) => Hash(x) + 0x9e3779b9 + (xs << 6) + (xs >> 2))
+  }
+
   def GetUUID() : UUID = {
-    var i1 = Hash(1)
-    var i2 = Hash(2)
-    xsOrig.foreach(i => i1 = i1 ^ Hash(i));
-    ysOrig.foreach(i => i2 = i2 ^ Hash(i));
-    new UUID(i1, i2)
+    new UUID(Hash(xsOrig), Hash(ysOrig))
   }
   def GenerateSignal(currentTime: Double): Signal = {
-    Signal(0, Map(GetUUID() -> ObstacleMessage.createNew(xsOrig, ysOrig, points)));
+    Signal(0, Map(GetUUID() -> ObstacleMessage.createNew(xsOrig, ysOrig)));
   }
 }
 

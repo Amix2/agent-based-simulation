@@ -111,6 +111,10 @@ object ContinuousEnvWorldCreator extends WorldCreator[ContinuousEnvConfig] {
 
           finalCellQueue.enqueue(gridMultiCellId)
         }
+
+        if (continuousEnvCell.obstacles.nonEmpty) {
+          var t = 0;
+        }
       } else {
         finalCellQueue.enqueue(gridMultiCellId)
       }
@@ -123,11 +127,11 @@ object ContinuousEnvWorldCreator extends WorldCreator[ContinuousEnvConfig] {
      // RunnerDefinition(535, 655, 10, 23),
     );
 
-    var base : Vec2  = new Vec2(735, 715);
+    var base : Vec2  = new Vec2(735, 1515);
     var step : Vec2  = new Vec2(80, 80);
 
-    for(x <- 0 to 10)
-      for(y <- 0 to 10)
+    for(x <- 0 to 0)
+      for(y <- 0 to 0)
       {
         var pos = base + step * new Vec2(x.doubleValue, y.doubleValue);
         var rad = scala.util.Random.nextFloat() * 10 + 10;
@@ -172,7 +176,15 @@ object ContinuousEnvWorldCreator extends WorldCreator[ContinuousEnvConfig] {
         }
 
         val obstaclesInCell = mergeToObstacles(obstaclesGroups)
+        var x = continuousEnvCell.gridMultiCellId.x
+        var y = continuousEnvCell.gridMultiCellId.y
+        if (x == 1 && y == 1) {
+        }
         continuousEnvCell.obstacles = obstaclesInCell
+        continuousEnvCell.obstacles.foreach(obs => {
+          if(obs.xsOrig.size > 20)
+          println(obs.xsOrig.size)
+        })
       }
 
       val obstacles: Array[Obstacle] = continuousEnvCell.obstacles
@@ -404,7 +416,7 @@ object ContinuousEnvWorldCreator extends WorldCreator[ContinuousEnvConfig] {
         newYs = newYs :+ coordinate.y.intValue
       })
 
-    Obstacle(newXs, newYs, newXs.length, obstacle.xsOrig,obstacle.ysOrig)
+    Obstacle(newXs, newYs, newXs.length, newXs, newYs)
   }
 
   private def getOverlappingObstacles(continuousEnvCell: ContinuousEnvCell, obstacles: List[Obstacle], x: Int, y: Int)
@@ -417,12 +429,12 @@ object ContinuousEnvWorldCreator extends WorldCreator[ContinuousEnvConfig] {
       xScale * config.cellSize + cellOutline.x.intValue, yScale * config.cellSize + cellOutline.y.intValue,
       cellOutline.width.intValue, cellOutline.height.intValue))
     val obstaclesAreas = obstacles
-      .map(obstacle => new Area(new Polygon(obstacle.xs, obstacle.ys, obstacle.points)))
+      .map(obstacle => (new Area(new Polygon(obstacle.xs, obstacle.ys, obstacle.points)), obstacle))
     obstaclesAreas
-      .foreach(obstacleArea => obstacleArea.intersect(cellOutlineArea))
+      .foreach(obstacleArea => (obstacleArea._1.intersect(cellOutlineArea), obstacleArea._2))
     val overlappingObstaclesAreas = obstaclesAreas
-      .filter(obstacleArea => !obstacleArea.isEmpty)
-      .map(overlappingObstacleArea => toObstacle(overlappingObstacleArea))
+      .filter(obstacleArea => !obstacleArea._1.isEmpty)
+      .map(overlappingObstacleArea => toObstacle(overlappingObstacleArea._1, overlappingObstacleArea._2))
       .map(obstacle => fixArtifactsInObstacle(obstacle, cellOutline, x, y))
 
     overlappingObstaclesAreas
@@ -500,6 +512,42 @@ object ContinuousEnvWorldCreator extends WorldCreator[ContinuousEnvConfig] {
     Obstacle(xs, ys, xs.length, xs, ys)
   }
 
+  private def toObstacle(overlappingObstacleArea: Area, originalObstacle: Obstacle): Obstacle = {
+    val pathIterator = overlappingObstacleArea.getPathIterator(null)
+    val coords = Array(0d, 0d, 0d, 0d, 0d, 0d)
+    var xs: Array[Int] = Array()
+    var ys: Array[Int] = Array()
+    while (!pathIterator.isDone) {
+      pathIterator.currentSegment(coords)
+      xs = xs :+ coords(0).intValue
+      ys = ys :+ coords(1).intValue
+      pathIterator.next()
+    }
+
+    xs = xs.dropRight(1)
+    ys = ys.dropRight(1)
+
+    Obstacle(xs, ys, xs.length, originalObstacle.xsOrig, originalObstacle.ysOrig)
+  }
+
+  private def toObstacle(overlappingObstacleArea: Area, xsOrig: Array[Int], ysOrig: Array[Int]): Obstacle = {
+    val pathIterator = overlappingObstacleArea.getPathIterator(null)
+    val coords = Array(0d, 0d, 0d, 0d, 0d, 0d)
+    var xs: Array[Int] = Array()
+    var ys: Array[Int] = Array()
+    while (!pathIterator.isDone) {
+      pathIterator.currentSegment(coords)
+      xs = xs :+ coords(0).intValue
+      ys = ys :+ coords(1).intValue
+      pathIterator.next()
+    }
+
+    xs = xs.dropRight(1)
+    ys = ys.dropRight(1)
+
+    Obstacle(xs, ys, xs.length, xsOrig, ysOrig)
+  }
+
   private def overlapsWithAny(obstacle: Obstacle, obstaclesGroup: Array[Obstacle]): Boolean = {
     obstaclesGroup.exists(existingObstacle => overlaps(obstacle, existingObstacle))
   }
@@ -557,14 +605,21 @@ object ContinuousEnvWorldCreator extends WorldCreator[ContinuousEnvConfig] {
     flips > 2
   }
 
+  def getXsOrig(obstaclesGroup: Array[Obstacle]): Array[Int] = {
+    obstaclesGroup.flatMap(obstacle => obstacle.xsOrig)
+  }
+
+  def getYsOrig(obstaclesGroup: Array[Obstacle]): Array[Int] = {
+    obstaclesGroup.flatMap(obstacle => obstacle.ysOrig)
+  }
+
   private def mergeToObstacle(obstaclesGroup: Array[Obstacle]): Obstacle = {
     val mergedObstacleArea = new Area()
     for (obstacle <- obstaclesGroup) {
       val obstaclePoly = new Polygon(obstacle.xs, obstacle.ys, obstacle.points)
       mergedObstacleArea.add(new Area(obstaclePoly))
     }
-
-    toObstacle(mergedObstacleArea)
+    toObstacle(mergedObstacleArea, getXsOrig(obstaclesGroup), getYsOrig(obstaclesGroup))
   }
 
   private def addDummyPointsBetweenPointsLyingOnEdges(cellOutline: CellOutline, obstacle: Obstacle, cellX: Int, cellY: Int)

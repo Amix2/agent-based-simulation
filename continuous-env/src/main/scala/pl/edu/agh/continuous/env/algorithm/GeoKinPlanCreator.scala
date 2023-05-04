@@ -170,7 +170,7 @@ final case class GeoKinPlanCreator() extends PlanCreator[ContinuousEnvConfig] {
                                  cell: ContinuousEnvCell,
                                  neighbourContents: Map[(ContinuousEnvCell, UUID), Direction],
                                  config: ContinuousEnvConfig): Runner = {
-    //return runner.withIncreasedForce(Vec2(0,- 1000));
+    return runner.withIncreasedForce(Vec2(0,-10000));
     var agentGeomCenter = Vec2(0, 0);
     var count = 0;
 

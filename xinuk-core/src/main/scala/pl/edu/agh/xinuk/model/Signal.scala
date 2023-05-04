@@ -11,7 +11,7 @@ object AgentMessage {
 }
 
 object ObstacleMessage {
-  def createNew(xs: Array[Int], ys: Array[Int], points: Int)  = new ObstacleMessage(1, xs, ys, points)
+  def createNew(xs: Array[Int], ys: Array[Int])  = new ObstacleMessage(2, xs, ys)
 }
 
 trait ObjectMessage extends Ordered[ObjectMessage]
@@ -29,11 +29,12 @@ case class AgentMessage(distanceToLive : Double, pos: Vec2, vel: Vec2, mass: Dou
   override def DecreaseDistanceToLive(value: Double): AgentMessage = AgentMessage(distanceToLive-value, pos, vel, mass, sphData);
 }
 
-case class ObstacleMessage(distanceToLive : Double, xs: Array[Int], ys: Array[Int], points: Int) extends ObjectMessage
+case class ObstacleMessage(distanceToLive : Double, xs: Array[Int], ys: Array[Int]) extends ObjectMessage
 {
   override def GetDistanceToLive(): Double = distanceToLive
 
-  override def DecreaseDistanceToLive(value: Double): ObstacleMessage = ObstacleMessage(distanceToLive-value, xs, ys, points);
+  override def DecreaseDistanceToLive(value: Double): ObstacleMessage = ObstacleMessage(distanceToLive-value, xs, ys);
+  def ToVec2List: List[Vec2] = xs.zip(ys).map { case (x, y) => Vec2(x, y) }.toList
 }
 
 final case class Signal(value: Double, objectMessages: Map[UUID, ObjectMessage])  {

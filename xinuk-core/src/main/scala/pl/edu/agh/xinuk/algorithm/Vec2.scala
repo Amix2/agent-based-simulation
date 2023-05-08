@@ -3,6 +3,10 @@ package pl.edu.agh.xinuk.algorithm
 import pl.edu.agh.xinuk.algorithm.MathUtils.DoubleExtensions
 
 import scala.language.reflectiveCalls
+final case class Vec2Int(x: Int, y: Int)
+{
+
+}
 
 final case class Vec2(x: Double, y: Double) {
   def unary_- : Vec2 = Vec2(-x, -y)

@@ -3,7 +3,7 @@ package pl.edu.agh.xinuk.config
 import io.jvm.uuid.UUID
 import pl.edu.agh.xinuk.model.{ObstacleMessage, Signal}
 
-case class Obstacle(xs: Array[Int], ys: Array[Int], points: Int, xsOrig: Array[Int], ysOrig: Array[Int]) {
+case class Obstacle(xs: Array[Int], ys: Array[Int], points: Int) {
 
   def Hash(x: Int): Int = {
     var out = ((x >> 16) ^ (x)) * 0x45d9f3b;
@@ -17,10 +17,11 @@ case class Obstacle(xs: Array[Int], ys: Array[Int], points: Int, xsOrig: Array[I
   }
 
   def GetUUID() : UUID = {
-    new UUID(Hash(xsOrig), Hash(ysOrig))
+    new UUID(Hash(xs), Hash(ys))
   }
   def GenerateSignal(currentTime: Double): Signal = {
-    Signal(0, Map(GetUUID() -> ObstacleMessage.createNew(xsOrig, ysOrig)));
+    //println(xs.toSeq.toString)
+    Signal(0, Map(GetUUID() -> ObstacleMessage.createNew(xs, ys)));
   }
 }
 

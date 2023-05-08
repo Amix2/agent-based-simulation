@@ -8,7 +8,7 @@ import pl.edu.agh.continuous.env.common.geometry.Line
 import pl.edu.agh.continuous.env.config.ContinuousEnvConfig
 import pl.edu.agh.continuous.env.model.continuous.CellOutline
 import pl.edu.agh.continuous.env.model.{ContinuousEnvCell, Runner}
-import pl.edu.agh.xinuk.algorithm.{Vec2, WorldCreator}
+import pl.edu.agh.xinuk.algorithm.{Vec2, WorldCreator, Vec2Int}
 import pl.edu.agh.xinuk.config.{Obstacle, RunnerDefinition}
 import pl.edu.agh.xinuk.model.continuous._
 import pl.edu.agh.xinuk.model.grid.GridDirection.{Bottom, BottomLeft, BottomRight, Left, Right, Top, TopLeft, TopRight}
@@ -46,6 +46,7 @@ object ContinuousEnvWorldCreator extends WorldCreator[ContinuousEnvConfig] {
     }
 
     val obstacles = bufferObstacles(config.obstacles)
+    val obstaclesWithMapBorder = bufferObstacles(config.obstacles ++ GetGlobalBorderObstacles())
 
     while (cellQueue.nonEmpty) {
       val gridMultiCellId: GridMultiCellId = cellQueue.dequeue()
@@ -59,6 +60,13 @@ object ContinuousEnvWorldCreator extends WorldCreator[ContinuousEnvConfig] {
 
       continuousEnvCell.neighbourhood = worldBuilder.getExistingNeighbourhood(gridMultiCellId)
       continuousEnvCell.cellOutline = cellOutlineMap(gridMultiCellId)
+
+      continuousEnvCell.globalObstacles = getOverlappingGlobalObstacles(continuousEnvCell, obstaclesWithMapBorder, x, y).toArray
+
+      if(continuousEnvCell.globalObstacles.nonEmpty)
+        {
+          println(continuousEnvCell.globalObstacles(0).xs.toSeq.toString)
+        }
 
       val overlappingObstacles = getOverlappingObstacles(continuousEnvCell, obstacles, x, y)
 
@@ -112,9 +120,6 @@ object ContinuousEnvWorldCreator extends WorldCreator[ContinuousEnvConfig] {
           finalCellQueue.enqueue(gridMultiCellId)
         }
 
-        if (continuousEnvCell.obstacles.nonEmpty) {
-          var t = 0;
-        }
       } else {
         finalCellQueue.enqueue(gridMultiCellId)
       }
@@ -181,10 +186,10 @@ object ContinuousEnvWorldCreator extends WorldCreator[ContinuousEnvConfig] {
         if (x == 1 && y == 1) {
         }
         continuousEnvCell.obstacles = obstaclesInCell
-        continuousEnvCell.obstacles.foreach(obs => {
-          if(obs.xsOrig.size > 20)
-          println(obs.xsOrig.size)
-        })
+//        continuousEnvCell.obstacles.foreach(obs => {
+//          if(obs.xsOrig.size > 20)
+//          println(obs.xsOrig.size)
+//        })
       }
 
       val obstacles: Array[Obstacle] = continuousEnvCell.obstacles
@@ -198,6 +203,18 @@ object ContinuousEnvWorldCreator extends WorldCreator[ContinuousEnvConfig] {
     }
 
     worldBuilder
+  }
+
+  private def GetGlobalBorderObstacles()(implicit config: ContinuousEnvConfig): List[Obstacle] =
+  {
+    var size = 100;
+    var max : Vec2Int = Vec2Int(config.worldWidth * config.cellSize, config.worldHeight * config.cellSize)
+    return List[Obstacle](
+      Obstacle(Array(0,max.x, max.x, 0), Array(-size, -size, 0, 0), 4),
+      Obstacle(Array(max.x, max.x + size, max.x + size, max.x), Array(0, 0, max.y, max.y), 4),
+      Obstacle(Array(0, max.x, max.x, 0), Array(max.y, max.y, max.y + size,max.y + size), 4),
+      Obstacle(Array(-size, 0, 0, -size), Array(0, 0, max.y, max.y), 4)
+    );
   }
 
   private def mapSegmentsToProperCoords(cardinalNeighbourhood: Map[GridDirection, Boundary], cellSize: Int): Map[Line, GridMultiCellId] = {
@@ -368,22 +385,22 @@ object ContinuousEnvWorldCreator extends WorldCreator[ContinuousEnvConfig] {
         val xs = Array(segment.a, segment.a, segment.b, segment.b)
         val ys = Array(0, 1, 1, 0).map(y => y + cell.cellOutline.y + cell.cellOutline.height)
 
-        Obstacle(xs, ys, 4, xs, ys)
+        Obstacle(xs, ys, 4)
       case Right =>
         val xs = Array(0, 1, 1, 0).map(x => x + cell.cellOutline.x + cell.cellOutline.width)
         val ys = Array(segment.b, segment.b, segment.a, segment.a)
 
-        Obstacle(xs, ys, 4, xs, ys)
+        Obstacle(xs, ys, 4)
       case Bottom =>
         val xs = Array(segment.a, segment.b, segment.b, segment.a)
         val ys = Array(0, 0, -1, -1).map(y => y + cell.cellOutline.y)
 
-        Obstacle(xs, ys, 4, xs, ys)
+        Obstacle(xs, ys, 4)
       case Left =>
         val xs = Array(0, -1, -1, 0).map(x => x + cell.cellOutline.x)
         val ys = Array(segment.a, segment.a, segment.b, segment.b)
 
-        Obstacle(xs, ys, 4, xs, ys)
+        Obstacle(xs, ys, 4)
       case _ => null
     }
   }
@@ -416,11 +433,27 @@ object ContinuousEnvWorldCreator extends WorldCreator[ContinuousEnvConfig] {
         newYs = newYs :+ coordinate.y.intValue
       })
 
-    Obstacle(newXs, newYs, newXs.length, newXs, newYs)
+    Obstacle(newXs, newYs, newXs.length)
   }
 
   private def getOverlappingObstacles(continuousEnvCell: ContinuousEnvCell, obstacles: List[Obstacle], x: Int, y: Int)
                                      (implicit config: ContinuousEnvConfig): List[Obstacle] = {
+    val cellOutline = continuousEnvCell.cellOutline
+
+    val overlappingObstaclesAreas = getOverlappingGlobalObstaclesAndAreas(continuousEnvCell, obstacles, x, y)
+      .map(overlappingObstacleArea => toObstacle(overlappingObstacleArea._1))
+      .map(obstacle => fixArtifactsInObstacle(obstacle, cellOutline, x, y))
+
+    overlappingObstaclesAreas
+  }
+
+  private def getOverlappingGlobalObstacles(continuousEnvCell: ContinuousEnvCell, obstacles: List[Obstacle], x: Int, y: Int)
+                                                   (implicit config: ContinuousEnvConfig): List[Obstacle] = {
+    getOverlappingGlobalObstaclesAndAreas(continuousEnvCell, obstacles, x, y).map(obstacleArea => obstacleArea._2);
+  }
+
+  private def getOverlappingGlobalObstaclesAndAreas(continuousEnvCell: ContinuousEnvCell, obstacles: List[Obstacle], x: Int, y: Int)
+                                     (implicit config: ContinuousEnvConfig): List[(Area, Obstacle)] = {
     val cellOutline = continuousEnvCell.cellOutline
     val xScale = y
     val yScale = config.worldWidth - x - 1
@@ -434,9 +467,6 @@ object ContinuousEnvWorldCreator extends WorldCreator[ContinuousEnvConfig] {
       .foreach(obstacleArea => (obstacleArea._1.intersect(cellOutlineArea), obstacleArea._2))
     val overlappingObstaclesAreas = obstaclesAreas
       .filter(obstacleArea => !obstacleArea._1.isEmpty)
-      .map(overlappingObstacleArea => toObstacle(overlappingObstacleArea._1, overlappingObstacleArea._2))
-      .map(obstacle => fixArtifactsInObstacle(obstacle, cellOutline, x, y))
-
     overlappingObstaclesAreas
   }
 
@@ -491,7 +521,7 @@ object ContinuousEnvWorldCreator extends WorldCreator[ContinuousEnvConfig] {
     }
     )
 
-    Obstacle(newXs, newYs, newXs.length, obstacle.xsOrig,obstacle.ysOrig)
+    Obstacle(newXs, newYs, newXs.length)
   }
 
   private def toObstacle(overlappingObstacleArea: Area): Obstacle = {
@@ -509,44 +539,9 @@ object ContinuousEnvWorldCreator extends WorldCreator[ContinuousEnvConfig] {
     xs = xs.dropRight(1)
     ys = ys.dropRight(1)
 
-    Obstacle(xs, ys, xs.length, xs, ys)
+    Obstacle(xs, ys, xs.length)
   }
 
-  private def toObstacle(overlappingObstacleArea: Area, originalObstacle: Obstacle): Obstacle = {
-    val pathIterator = overlappingObstacleArea.getPathIterator(null)
-    val coords = Array(0d, 0d, 0d, 0d, 0d, 0d)
-    var xs: Array[Int] = Array()
-    var ys: Array[Int] = Array()
-    while (!pathIterator.isDone) {
-      pathIterator.currentSegment(coords)
-      xs = xs :+ coords(0).intValue
-      ys = ys :+ coords(1).intValue
-      pathIterator.next()
-    }
-
-    xs = xs.dropRight(1)
-    ys = ys.dropRight(1)
-
-    Obstacle(xs, ys, xs.length, originalObstacle.xsOrig, originalObstacle.ysOrig)
-  }
-
-  private def toObstacle(overlappingObstacleArea: Area, xsOrig: Array[Int], ysOrig: Array[Int]): Obstacle = {
-    val pathIterator = overlappingObstacleArea.getPathIterator(null)
-    val coords = Array(0d, 0d, 0d, 0d, 0d, 0d)
-    var xs: Array[Int] = Array()
-    var ys: Array[Int] = Array()
-    while (!pathIterator.isDone) {
-      pathIterator.currentSegment(coords)
-      xs = xs :+ coords(0).intValue
-      ys = ys :+ coords(1).intValue
-      pathIterator.next()
-    }
-
-    xs = xs.dropRight(1)
-    ys = ys.dropRight(1)
-
-    Obstacle(xs, ys, xs.length, xsOrig, ysOrig)
-  }
 
   private def overlapsWithAny(obstacle: Obstacle, obstaclesGroup: Array[Obstacle]): Boolean = {
     obstaclesGroup.exists(existingObstacle => overlaps(obstacle, existingObstacle))
@@ -605,13 +600,6 @@ object ContinuousEnvWorldCreator extends WorldCreator[ContinuousEnvConfig] {
     flips > 2
   }
 
-  def getXsOrig(obstaclesGroup: Array[Obstacle]): Array[Int] = {
-    obstaclesGroup.flatMap(obstacle => obstacle.xsOrig)
-  }
-
-  def getYsOrig(obstaclesGroup: Array[Obstacle]): Array[Int] = {
-    obstaclesGroup.flatMap(obstacle => obstacle.ysOrig)
-  }
 
   private def mergeToObstacle(obstaclesGroup: Array[Obstacle]): Obstacle = {
     val mergedObstacleArea = new Area()
@@ -619,7 +607,7 @@ object ContinuousEnvWorldCreator extends WorldCreator[ContinuousEnvConfig] {
       val obstaclePoly = new Polygon(obstacle.xs, obstacle.ys, obstacle.points)
       mergedObstacleArea.add(new Area(obstaclePoly))
     }
-    toObstacle(mergedObstacleArea, getXsOrig(obstaclesGroup), getYsOrig(obstaclesGroup))
+    toObstacle(mergedObstacleArea)
   }
 
   private def addDummyPointsBetweenPointsLyingOnEdges(cellOutline: CellOutline, obstacle: Obstacle, cellX: Int, cellY: Int)
@@ -645,7 +633,7 @@ object ContinuousEnvWorldCreator extends WorldCreator[ContinuousEnvConfig] {
       }
     }
 
-    Obstacle(newXs, newYs, newXs.length, obstacle.xsOrig,obstacle.ysOrig)
+    Obstacle(newXs, newYs, newXs.length)
   }
 
   private def isLyingInsideCellOutline(cellOutline: CellOutline, x: Int, y: Int, cellX: Int, cellY: Int)
@@ -751,7 +739,7 @@ object ContinuousEnvWorldCreator extends WorldCreator[ContinuousEnvConfig] {
       localObstaclePointsY = localObstaclePointsY :+ localY
     }
 
-    Obstacle(localObstaclePointsX, localObstaclePointsY, localObstaclePointsX.length, obstacle.xsOrig,obstacle.ysOrig)
+    Obstacle(localObstaclePointsX, localObstaclePointsY, localObstaclePointsX.length)
   }
 
   private def findNextTrueBeforeFalse(flags: Array[Boolean], start: Int): Int = {

@@ -14,7 +14,7 @@ final case class ContinuousEnvCell(initialSignal: Signal, gridMultiCellId: GridM
     { // runners can generate signal in cell they are standing on
       var signals = (List(initialSignal)
         ++ runners.map(r => r.GenerateSignal(iteration * config.deltaTime, this))
-        ++ obstacles.map(r => r.GenerateSignal(iteration * config.deltaTime))
+        ++ globalObstacles.map(r => r.GenerateSignal(iteration * config.deltaTime))
         )
         .foldLeft(Signal.zero)(_ + _);
       signals
@@ -37,6 +37,7 @@ final case class ContinuousEnvCell(initialSignal: Signal, gridMultiCellId: GridM
   var cellOutline: CellOutline = CellOutline.default()
   var neighbourhood: Neighbourhood = Neighbourhood.empty()
   var obstacles: Array[Obstacle] = Array()
+  var globalObstacles: Array[Obstacle] = Array()
   var runners: Array[Runner] = Array()
   var graph: Map[Vec2, Set[Vec2]] = Map.empty
   var cardinalSegments: Map[Line, GridMultiCellId] = Map.empty

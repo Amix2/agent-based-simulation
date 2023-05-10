@@ -118,12 +118,12 @@ final case class GeoKinPlanCreator() extends PlanCreator[ContinuousEnvConfig] {
 //        cell,
 //        neighbourContents,
 //        config))
-//      .map(runner => SphForceCalculator.adjustSphForRunner(  // sph force
-//        runner,
-//        signalMap,
-//        cell,
-//        neighbourContents,
-//        config))
+      .map(runner => SphForceCalculator.adjustSphForRunner(  // sph force
+        runner,
+        signalMap,
+        cell,
+        neighbourContents,
+        config))
       .map(runner => endStepRunnerUpdate( // doesnt matter
         runner,
         signalMap,

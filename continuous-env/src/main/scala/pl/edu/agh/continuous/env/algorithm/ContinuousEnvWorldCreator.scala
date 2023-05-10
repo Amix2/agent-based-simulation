@@ -8,7 +8,7 @@ import pl.edu.agh.continuous.env.common.geometry.Line
 import pl.edu.agh.continuous.env.config.ContinuousEnvConfig
 import pl.edu.agh.continuous.env.model.continuous.CellOutline
 import pl.edu.agh.continuous.env.model.{ContinuousEnvCell, Runner}
-import pl.edu.agh.xinuk.algorithm.{Vec2, WorldCreator, Vec2Int}
+import pl.edu.agh.xinuk.algorithm.{Vec2, Vec2Int, WorldCreator}
 import pl.edu.agh.xinuk.config.{Obstacle, RunnerDefinition}
 import pl.edu.agh.xinuk.model.continuous._
 import pl.edu.agh.xinuk.model.grid.GridDirection.{Bottom, BottomLeft, BottomRight, Left, Right, Top, TopLeft, TopRight}
@@ -18,6 +18,7 @@ import pl.edu.agh.xinuk.model.{CellState, Signal, WorldBuilder}
 import java.awt.geom.Area
 import java.awt.{Color, Polygon}
 import java.util.UUID
+import scala.collection.immutable.List
 import scala.collection.mutable
 import scala.collection.mutable.{Map => MutableMap}
 import scala.jdk.CollectionConverters._
@@ -61,13 +62,7 @@ object ContinuousEnvWorldCreator extends WorldCreator[ContinuousEnvConfig] {
       continuousEnvCell.neighbourhood = worldBuilder.getExistingNeighbourhood(gridMultiCellId)
       continuousEnvCell.cellOutline = cellOutlineMap(gridMultiCellId)
 
-      continuousEnvCell.globalObstacles = getOverlappingGlobalObstacles(continuousEnvCell, obstaclesWithMapBorder, x, y).toArray
-
-      if(continuousEnvCell.globalObstacles.nonEmpty)
-        {
-          println(continuousEnvCell.globalObstacles(0).xs.toSeq.toString)
-        }
-
+      continuousEnvCell.globalObstacles = FixGlobalObstacles(getOverlappingGlobalObstacles(continuousEnvCell, obstaclesWithMapBorder, x, y)).toArray
       val overlappingObstacles = getOverlappingObstacles(continuousEnvCell, obstacles, x, y)
 
       if (overlappingObstacles.nonEmpty) {
@@ -132,11 +127,11 @@ object ContinuousEnvWorldCreator extends WorldCreator[ContinuousEnvConfig] {
      // RunnerDefinition(535, 655, 10, 23),
     );
 
-    var base : Vec2  = new Vec2(735, 1515);
+    var base : Vec2  = new Vec2(735, 515);
     var step : Vec2  = new Vec2(80, 80);
 
-    for(x <- 0 to 0)
-      for(y <- 0 to 0)
+    for(x <- 0 to 10)
+      for(y <- 0 to 10)
       {
         var pos = base + step * new Vec2(x.doubleValue, y.doubleValue);
         var rad = scala.util.Random.nextFloat() * 10 + 10;
@@ -215,6 +210,11 @@ object ContinuousEnvWorldCreator extends WorldCreator[ContinuousEnvConfig] {
       Obstacle(Array(0, max.x, max.x, 0), Array(max.y, max.y, max.y + size,max.y + size), 4),
       Obstacle(Array(-size, 0, 0, -size), Array(0, 0, max.y, max.y), 4)
     );
+  }
+
+  private def FixGlobalObstacles(obstacles: List[Obstacle])(implicit config: ContinuousEnvConfig): List[Obstacle] = {
+    val mapSize = config.worldWidth * config.cellSize
+    obstacles.map(obs => Obstacle(obs.xs, obs.ys.map(y => mapSize - y), obs.points));
   }
 
   private def mapSegmentsToProperCoords(cardinalNeighbourhood: Map[GridDirection, Boundary], cellSize: Int): Map[Line, GridMultiCellId] = {

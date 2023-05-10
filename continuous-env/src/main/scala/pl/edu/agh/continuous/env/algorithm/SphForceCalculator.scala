@@ -31,14 +31,18 @@ object SphForceCalculator {
       case _ => (List.empty[AgentMessage], List.empty[ObstacleMessage])
     }
 
-    val obstaclePolygons : List[List[Vec2]] = obstacleMessages.map(msg => msg.ToVec2List);
+
 
     var myDensity: Double = 0;
     val myPos = runner.globalCellPosition(config) + cell.BaseCoordinates(config);
     val myVel = runner.velocity;
 
-    agentMessages.foreach((msg =>
-      myDensity += msg.mass * kernel((myPos - msg.pos).length, config.sphConfig.kernelSize*100)))
+    val obstaclePolygons: List[List[Vec2]] = obstacleMessages.map(msg => msg.ToVec2List);
+    val wallPoint = ClosestPointInPolygon.closestPointInPolygons(myPos, obstaclePolygons);
+
+    agentMessages.foreach(msg =>
+      myDensity += msg.mass * kernel((myPos - msg.pos).length, config.sphConfig.kernelSize*100))
+    myDensity += runner.mass * kernel((myPos - wallPoint).length, config.sphConfig.kernelSize*100)
 
     var myPressure: Double = 0;
     if (myDensity > config.sphConfig.targetDensity)
@@ -59,14 +63,16 @@ object SphForceCalculator {
         }
       }
     })
-  println(obstaclePolygons);
-    if(obstaclePolygons.nonEmpty)
-      {
-        val wallPoint = ClosestPointInPolygon.closestPointInPolygons(myPos, obstaclePolygons);
-       // println(wallPoint)
-      }
+
+    if (myDensity > 0) {
+      val dir = myPos - wallPoint
+      myForcePressure += dir *
+        (myPressure / (myDensity * myDensity) + myPressure / (myDensity * myDensity)) *
+        kernelDerivative((myPos - wallPoint).length, config.sphConfig.kernelSize * 100) * (runner.radius / (myPos - wallPoint).length);
+    }
+
+
     val force = myForceViscosity - myForcePressure;
-    //println(force)
     return runner.withNewSphData(SphObjectData(myPressure, myDensity)).withIncreasedForce(Vec2(force.x, -force.y))
   }
 

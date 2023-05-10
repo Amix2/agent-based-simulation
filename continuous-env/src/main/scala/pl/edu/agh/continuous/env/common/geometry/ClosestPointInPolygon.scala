@@ -8,16 +8,23 @@ object ClosestPointInPolygon {
   }
 
   def distanceToLine(p: Vec2, line: Line): Double = {
-    val numerator = math.abs((line.p2.y - line.p1.y) * p.x - (line.p2.x - line.p1.x) * p.y + line.p2.x * line.p1.y - line.p2.y * line.p1.x)
-    val denominator = distance(line.p1, line.p2)
-    numerator / denominator
+    line.segmentDistance(p)
   }
 
-  def closestPoint(p: Vec2, line: Line): Vec2 = {
-    val u = ((p.x - line.p1.x) * (line.p2.x - line.p1.x) + (p.y - line.p1.y) * (line.p2.y - line.p1.y)) / math.pow(distance(line.p1, line.p2), 2)
-    val closest = Vec2(line.p1.x + u * (line.p2.x - line.p1.x), line.p1.y + u * (line.p2.y - line.p1.y))
-    closest
+  def closestPoint(P: Vec2, line: Line): Vec2 = {
+    val AB = line.p2 - line.p1
+    val AP = P - line.p1
+    val lengthSqrAB = AB.x * AB.x + AB.y * AB.y
+    var t = (AP.x * AB.x + AP.y * AB.y) / lengthSqrAB
+    if (t < 0)
+      t = 0;
+    if (t > 1)
+      t = 1;
+    return line.p1 + AB * t
   }
+
+
+
 
   def closestPointInPolygon(A: Vec2, polygon: List[Vec2]): Vec2 = {
     var minDistance = distance(A, polygon.head)
@@ -35,6 +42,8 @@ object ClosestPointInPolygon {
   }
 
   def closestPointInPolygons(A: Vec2, polygons: List[List[Vec2]]): Vec2 = {
+    if(polygons.isEmpty)
+      return Vec2(Float.MaxValue,Float.MaxValue);
     polygons.map(poly => closestPointInPolygon(A, poly)).minBy(p => (p - A).length)
   }
 }

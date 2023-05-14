@@ -138,7 +138,13 @@ final case class GeoKinPlanCreator() extends PlanCreator[ContinuousEnvConfig] {
         neighbourContents,
         cell,
         allReachableRunners - runner,
-        config))
+        config,
+        signalMap))
+    .map(runner => StepAdjustmentCalculator.limitNextStepToObstacles( // nextStep
+      runner,
+      config,
+      cell,
+      signalMap))
 //      .map(runner => RepellingForceCalculator.adjustNextStepWithRepellingForceFromObstacles(  // force ?
 //        runner,
 //        cell,
@@ -147,12 +153,13 @@ final case class GeoKinPlanCreator() extends PlanCreator[ContinuousEnvConfig] {
 //      .map(runner => applyForceForRunner( // force -> velocity, next step
 //        runner,
 //        config))
-//      .map(runner => StepAdjustmentCalculator.adjustNextStepToObstaclesAndRunners(
-//        runner,
-//        neighbourContents,
-//        cell,
-//        allReachableRunners - runner,
-//        config))
+      .map(runner => StepAdjustmentCalculator.adjustNextStepToObstaclesAndRunners(
+        runner,
+        neighbourContents,
+        cell,
+        allReachableRunners - runner,
+        config,
+        signalMap))
     new Plans(Map.empty, Seq(Plan(StateUpdate(RunnerOccupied(cell.generation + 1, runnersWithAdjustedVelocity)))))
   }
 

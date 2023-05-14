@@ -7,7 +7,7 @@ import pl.edu.agh.continuous.env.common.ObstacleMapping
 import pl.edu.agh.continuous.env.common.RunnerPhysics.RunnerExtensions
 import pl.edu.agh.continuous.env.common.ToVec2Conversions.SignalMapConversionExtensions
 import pl.edu.agh.continuous.env.common.geometry.Algorithms.LineIntersection
-import pl.edu.agh.continuous.env.common.geometry.Line
+import pl.edu.agh.continuous.env.common.geometry.{ClosestPointInPolygon, Line}
 import pl.edu.agh.continuous.env.config.ContinuousEnvConfig
 import pl.edu.agh.continuous.env.model.{ContinuousEnvCell, MoveCompletion, Runner, RunnerOccupied}
 import pl.edu.agh.xinuk.algorithm.{Plan, PlanCreator, Plans, StateUpdate, Vec2}
@@ -24,7 +24,8 @@ object StepAdjustmentCalculator {
                                                   neighbourContents: Map[(ContinuousEnvCell, UUID), Direction],
                                                   currentCell: ContinuousEnvCell,
                                                   allReachableRunners: Set[Runner],
-                                                  config: ContinuousEnvConfig): Runner = {
+                                                  config: ContinuousEnvConfig,
+                                                  signalMap: SignalMap): Runner = {
     val inflatedRunners : Seq[Runner] = Helper.inflateRunners(allReachableRunners.toSeq)
 
     val moveCompletionConsideringObstacles =
@@ -62,5 +63,24 @@ object StepAdjustmentCalculator {
     } else {
       runner
     }
+  }
+
+  def limitNextStepToObstacles(runner: Runner,
+                                          config: ContinuousEnvConfig,
+                                          cell: ContinuousEnvCell,
+                                          signalMap: SignalMap): Runner = {
+    val myPos = runner.globalCellPosition(config) + cell.BaseCoordinates(config);
+    val nextPos = myPos + runner.nextStep
+    val (agentMessages, obstacleMessages) = signalMap.toObjectMessagesSplit match {
+      case (agents, obstacles) => (agents, obstacles)
+      case _ => (List.empty[AgentMessage], List.empty[ObstacleMessage])
+    }
+    val obstaclePolygons: List[List[Vec2]] = obstacleMessages.map(msg => msg.ToVec2List);
+    val wallPoint = ClosestPointInPolygon.closestPointInPolygons(nextPos, obstaclePolygons);
+
+    if((wallPoint - nextPos).length < runner.radius/2)
+      return runner.withNextStep(Vec2(0,0), Vec2(0,0));
+    //       return runner.withNextStep(- runner.nextStep, -runner.velocity);
+    return runner
   }
 }

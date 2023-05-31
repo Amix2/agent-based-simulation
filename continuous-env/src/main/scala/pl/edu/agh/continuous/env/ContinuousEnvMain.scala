@@ -52,7 +52,7 @@ object ContinuousEnvMain extends LazyLogging {
 
 //    var x = continuousEnvCell.BaseCoordinates.x
 //    var y = continuousEnvCell.BaseCoordinates.y
-    //return new Color((x*si).toInt,(y*si).toInt,0)
+    return new Color(105,105,150)
     var count = 0;
     var maxVal = 0.0;
 

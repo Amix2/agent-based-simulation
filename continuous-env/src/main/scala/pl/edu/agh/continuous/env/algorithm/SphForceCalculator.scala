@@ -32,7 +32,6 @@ object SphForceCalculator {
     }
 
 
-
     var myDensity: Double = 0;
     val myPos = runner.globalCellPosition(config) + cell.BaseCoordinates(config);
     val myVel = runner.velocity;

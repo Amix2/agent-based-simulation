@@ -106,18 +106,18 @@ final case class GeoKinPlanCreator() extends PlanCreator[ContinuousEnvConfig] {
           cell,
           neighbourContents,
           config))
-      .map(runner => SignalForceCalculator.adjustVelocityForRunner( // force
-        runner,
-        signalMap,
-        cell,
-        neighbourContents,
-        config))
-//      .map(runner => adjustSocialForceForRunner( // force
+//      .map(runner => SignalForceCalculator.adjustVelocityForRunner( // force
 //        runner,
 //        signalMap,
 //        cell,
 //        neighbourContents,
 //        config))
+      .map(runner => adjustSocialForceForRunner( // force
+        runner,
+        signalMap,
+        cell,
+        neighbourContents,
+        config))
       .map(runner => SphForceCalculator.adjustSphForRunner(  // sph force
         runner,
         signalMap,
@@ -132,6 +132,12 @@ final case class GeoKinPlanCreator() extends PlanCreator[ContinuousEnvConfig] {
         config))
       .map(runner => applyForceForRunner( // force -> velocity, next step
         runner,
+        config))
+      .map(runner => ORCAVelocityCalculator.adjustVelocityForRunner( // ORCA collision avoidance
+        runner,
+        signalMap,
+        cell,
+        neighbourContents,
         config))
       .map(runner => StepAdjustmentCalculator.adjustNextStepToObstaclesAndRunners( // nextStep
         runner,
@@ -177,7 +183,17 @@ final case class GeoKinPlanCreator() extends PlanCreator[ContinuousEnvConfig] {
                                  cell: ContinuousEnvCell,
                                  neighbourContents: Map[(ContinuousEnvCell, UUID), Direction],
                                  config: ContinuousEnvConfig): Runner = {
-    return runner.withIncreasedForce(Vec2(0,-10000));
+    return runner.withIncreasedForce(Vec2(1,-500));
+    if(runner.tag == "B")
+         return runner.withIncreasedForce(Vec2(0,10000));
+    if(runner.tag == "A")
+      return runner.withIncreasedForce(Vec2(0,-10000));
+
+    if (runner.tag == "C")
+      return runner.withIncreasedForce(Vec2(10000, 0));
+    if (runner.tag == "D")
+      return runner.withIncreasedForce(Vec2(-10000, 0));
+
     var agentGeomCenter = Vec2(0, 0);
     var count = 0;
 

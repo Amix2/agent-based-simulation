@@ -136,7 +136,7 @@ object CollisionAvoidance {
     def getMaxMoveCompletionRespectingInvariantSweptCircle(invariantSweptCircle: SweptCircle): MoveCompletion = {
       try {
         if (invariantSweptCircle.intersects(runner.body)) {
-          val otherRunner = Runner.createNewMock(invariantSweptCircle, runner.speed, runner.color)
+          val otherRunner = Runner.createNewMock(invariantSweptCircle, runner.speed, runner.color, "")
           val otherRunnerMoveCompletion = otherRunner.getMaxMoveCompletionRespectingCircle(runner.body)
           val otherRunnerMaxMoveCompletionEndPosition = otherRunner.endPosition(otherRunnerMoveCompletion)
           val v = otherRunnerMaxMoveCompletionEndPosition - runner.positionInCell

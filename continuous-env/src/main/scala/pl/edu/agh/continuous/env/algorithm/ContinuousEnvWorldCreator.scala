@@ -127,7 +127,7 @@ object ContinuousEnvWorldCreator extends WorldCreator[ContinuousEnvConfig] {
      // RunnerDefinition(535, 655, 10, 23),
     );
 
-    var base : Vec2  = new Vec2(735, 515);
+    var base : Vec2  = new Vec2(1235, 515);
     var step : Vec2  = new Vec2(80, 80);
 
     for(x <- 0 to 10)
@@ -136,8 +136,21 @@ object ContinuousEnvWorldCreator extends WorldCreator[ContinuousEnvConfig] {
         var pos = base + step * new Vec2(x.doubleValue, y.doubleValue);
         var rad = scala.util.Random.nextFloat() * 10 + 10;
         var speed = scala.util.Random.nextFloat() * 50 + 90;
-        runners = runners.appended(new RunnerDefinition(pos.x, pos.y, rad, speed));
+        //runners = runners.appended(new RunnerDefinition(pos.x, pos.y, rad, speed));
       }
+
+    var rad = 5 + 10;
+    var speed = 25 + 90;
+//    for(x <- 0 to 10)
+//      runners = runners.appended(new RunnerDefinition(base.x - x * 100, base.y, rad, speed, "A"));
+//    for(x <- 0 to 10)
+//      runners = runners.appended(new RunnerDefinition(base.x-x*100, base.y+1100, rad, speed, "B"));
+//
+//    for(x <- 0 to 10)
+//      runners = runners.appended(new RunnerDefinition(base.x+500, base.y+x*100, rad, speed, "D"));
+//    for(x <- 0 to 10)
+    runners = runners.appended(new RunnerDefinition(base.x-200, base.y+900  , rad, speed, "D"));
+
 
     while (finalCellQueue.nonEmpty) {
       val gridMultiCellId = finalCellQueue.dequeue()
@@ -149,7 +162,7 @@ object ContinuousEnvWorldCreator extends WorldCreator[ContinuousEnvConfig] {
           var runInCellPos = runPos - cellBase;
           if(runInCellPos.x < cellSize && runInCellPos.y < cellSize && runInCellPos.x >= 0 && runInCellPos.y >= 0)
           {
-            val runnerObj: Runner = Runner.createNew(runInCellPos, runner.radius, runner.maxSpeed, runner.color)
+            val runnerObj: Runner = Runner.createNew(runInCellPos, runner.radius, runner.maxSpeed, runner.color, runner.tag)
             continuousEnvCell.runners = continuousEnvCell.runners.appended(runnerObj)
             continuousEnvCell.coordinates += (runnerObj.id -> (runnerObj.positionInCell.x, runnerObj.positionInCell.y, runnerObj.radius, runnerObj.color))
           }

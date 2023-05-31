@@ -7,7 +7,7 @@ import pl.edu.agh.xinuk.config.XinukConfig
 import scala.math.sqrt
 
 object AgentMessage {
-  def createNew(pos: Vec2, vel: Vec2, mass: Double, sphData: SphObjectData)  = new AgentMessage(5, pos, vel, mass, sphData)
+  def createNew(pos: Vec2, vel: Vec2, mass: Double, sphData: SphObjectData, radius: Double)  = new AgentMessage(5, pos, vel, mass, sphData, radius)
 }
 
 object ObstacleMessage {
@@ -22,11 +22,11 @@ trait ObjectMessage extends Ordered[ObjectMessage]
   def IsValid(): Boolean = GetDistanceToLive() > 0;
 }
 
-case class AgentMessage(distanceToLive : Double, pos: Vec2, vel: Vec2, mass: Double, sphData: SphObjectData) extends ObjectMessage
+case class AgentMessage(distanceToLive : Double, pos: Vec2, vel: Vec2, mass: Double, sphData: SphObjectData, radius: Double) extends ObjectMessage
 {
   override def GetDistanceToLive(): Double = distanceToLive
 
-  override def DecreaseDistanceToLive(value: Double): AgentMessage = AgentMessage(distanceToLive-value, pos, vel, mass, sphData);
+  override def DecreaseDistanceToLive(value: Double): AgentMessage = AgentMessage(distanceToLive-value, pos, vel, mass, sphData, radius);
 }
 
 case class ObstacleMessage(distanceToLive : Double, xs: Array[Int], ys: Array[Int]) extends ObjectMessage

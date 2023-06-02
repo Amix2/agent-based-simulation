@@ -3,9 +3,9 @@ package pl.edu.agh.continuous.env.config
 import pl.edu.agh.xinuk.config.{Obstacle, GuiType, XinukConfig}
 import pl.edu.agh.xinuk.model.{Signal, WorldType}
 
-case class SphConfig(targetDensity: Double = 100
-                     , stiffness: Double = 2000
-                     , viscosity: Double = 5000
+case class SphConfig(targetDensity: Double = 200
+                     , stiffness: Double = 20000
+                     , viscosity: Double = 0
                      , kernelSize: Double = 1.5)
 
 final case class ContinuousEnvConfig(

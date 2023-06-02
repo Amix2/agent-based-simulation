@@ -53,7 +53,7 @@ object ContinuousEnvWorldCreator extends WorldCreator[ContinuousEnvConfig] {
       val gridMultiCellId: GridMultiCellId = cellQueue.dequeue()
       val x = gridMultiCellId.x
       val y = gridMultiCellId.y
-      val continuousEnvCell: ContinuousEnvCell = if (x == 23 && y == 5) {
+      val continuousEnvCell: ContinuousEnvCell = if (x == 23 && y >=11 && y <=13) {
         ContinuousEnvCell(config.initialSignal, gridMultiCellId)
       } else {
         ContinuousEnvCell(Signal.zero, gridMultiCellId)
@@ -127,16 +127,16 @@ object ContinuousEnvWorldCreator extends WorldCreator[ContinuousEnvConfig] {
      // RunnerDefinition(535, 655, 10, 23),
     );
 
-    var base : Vec2  = new Vec2(1235, 515);
-    var step : Vec2  = new Vec2(80, 80);
+    var base : Vec2  = new Vec2(1150, 150);
+    var step : Vec2  = new Vec2(100, 100);
 
-    for(x <- 0 to 10)
-      for(y <- 0 to 10)
+    for(x <- 0 to 27)
+      for(y <- 0 to 12)
       {
         var pos = base + step * new Vec2(x.doubleValue, y.doubleValue);
-        var rad = scala.util.Random.nextFloat() * 10 + 10;
-        var speed = scala.util.Random.nextFloat() * 50 + 90;
-        //runners = runners.appended(new RunnerDefinition(pos.x, pos.y, rad, speed));
+        var rad = scala.util.Random.nextFloat() * 0 + 25;
+        var speed = scala.util.Random.nextFloat() * 0 + 120;
+        runners = runners.appended(new RunnerDefinition(pos.x, pos.y, rad, speed, "R"));
       }
 
     var rad = 5 + 10;
@@ -149,7 +149,7 @@ object ContinuousEnvWorldCreator extends WorldCreator[ContinuousEnvConfig] {
 //    for(x <- 0 to 10)
 //      runners = runners.appended(new RunnerDefinition(base.x+500, base.y+x*100, rad, speed, "D"));
 //    for(x <- 0 to 10)
-    runners = runners.appended(new RunnerDefinition(base.x-200, base.y+900  , rad, speed, "D"));
+    //runners = runners.appended(new RunnerDefinition(base.x-200, base.y+900  , rad, speed, "D"));
 
 
     while (finalCellQueue.nonEmpty) {

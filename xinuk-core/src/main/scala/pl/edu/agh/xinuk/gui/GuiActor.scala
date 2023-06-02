@@ -237,7 +237,7 @@ private[gui] class GuiGrid(worldSpan: ((Int, Int), (Int, Int)), cellToColor: Par
       val color: Color = cellToColor.applyOrElse(state, defaultColor)
       //if (color.equals(Color.BLUE)) {
         img.setRGB(startX, startY, guiCellSize, guiCellSize, Array.fill(guiCellSize * guiCellSize)(color.getRGB), 0, guiCellSize)
-      //}
+     // }
       val graphics = img.getGraphics
       graphics.setColor(Color.BLUE)
       graphics.drawRect(startX, startY, guiCellSize, guiCellSize)

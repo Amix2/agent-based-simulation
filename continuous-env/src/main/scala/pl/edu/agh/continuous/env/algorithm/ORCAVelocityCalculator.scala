@@ -418,7 +418,7 @@ object ORCAVelocityCalculator {
     if (lineFail < orcaLines.size) {
       newVel = LinearProgram3(orcaLines, numObstLines, lineFail, runner.maxSpeed*0.01);
     }
-    println(myVel, newVel, orcaLines, obstacleSegments)
+    //println(myVel, newVel, orcaLines, obstacleSegments)
     newVel *= 100;
     newVel = Vec2(newVel.x, -newVel.y);
 

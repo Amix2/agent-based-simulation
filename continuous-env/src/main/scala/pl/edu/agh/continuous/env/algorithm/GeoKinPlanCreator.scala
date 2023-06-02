@@ -146,11 +146,11 @@ final case class GeoKinPlanCreator() extends PlanCreator[ContinuousEnvConfig] {
         allReachableRunners - runner,
         config,
         signalMap))
-    .map(runner => StepAdjustmentCalculator.limitNextStepToObstacles( // nextStep
-      runner,
-      config,
-      cell,
-      signalMap))
+//    .map(runner => StepAdjustmentCalculator.limitNextStepToObstacles( // nextStep
+//      runner,
+//      config,
+//      cell,
+//      signalMap))
 //      .map(runner => RepellingForceCalculator.adjustNextStepWithRepellingForceFromObstacles(  // force ?
 //        runner,
 //        cell,
@@ -183,47 +183,60 @@ final case class GeoKinPlanCreator() extends PlanCreator[ContinuousEnvConfig] {
                                  cell: ContinuousEnvCell,
                                  neighbourContents: Map[(ContinuousEnvCell, UUID), Direction],
                                  config: ContinuousEnvConfig): Runner = {
-    return runner.withIncreasedForce(Vec2(1,-500));
-    if(runner.tag == "B")
-         return runner.withIncreasedForce(Vec2(0,10000));
-    if(runner.tag == "A")
-      return runner.withIncreasedForce(Vec2(0,-10000));
+    var force = Vec2(0,0);
+    val strength = runner.legForce / 10;
+    if(runner.tag.contains("R"))
+      force += Vec2(0,-strength);
+    if (runner.tag.contains("L"))
+      force += Vec2(0, strength);
+    if (runner.tag.contains("U"))
+      force += Vec2(-strength, 0);
+    if (runner.tag.contains("D"))
+      force += Vec2(strength, 0);
+    return runner.withIncreasedForce(force);
 
-    if (runner.tag == "C")
-      return runner.withIncreasedForce(Vec2(10000, 0));
-    if (runner.tag == "D")
-      return runner.withIncreasedForce(Vec2(-10000, 0));
 
-    var agentGeomCenter = Vec2(0, 0);
-    var count = 0;
-
-    val (agentMessages, obstacleMessages) = signalMap.toObjectMessagesSplit match {
-      case (agents, obstacles) => (agents, obstacles)
-      case _ => (List.empty[AgentMessage], List.empty[ObstacleMessage])
-    }
-
-    agentMessages.foreach({ case (sig) => {
-      agentGeomCenter = agentGeomCenter + sig.pos
-      count += 1;
-    }})
-
-    if(count == 0)
-      return runner;
-
-    agentGeomCenter = agentGeomCenter / count;
-   // agentGeomCenter = Vec2(835.0,815.0);  // 635.0,515.0
-    var runnerGlobalPos = runner.globalCellPosition(config) + cell.BaseCoordinates(config);
-    var dir = agentGeomCenter - runnerGlobalPos;
-    if(dir.lengthSq == 0)
-      return runner;
-    dir = dir.normalized
-
-    var swappedDir = Vec2(dir.y, dir.x);
-    var fixedDir = Vec2(dir.x, -dir.y);
-    var force = fixedDir*5000.1;
-    //force = Vec2(0.0,0);
-    var out = runner.withIncreasedForce(force)
-    return out;
+//
+//    if(runner.tag == "B")
+//         return runner.withIncreasedForce(Vec2(0,10000));
+//    if(runner.tag == "A")
+//      return runner.withIncreasedForce(Vec2(0,-10000));
+//
+//    if (runner.tag == "C")
+//      return runner.withIncreasedForce(Vec2(10000, 0));
+//    if (runner.tag == "D")
+//      return runner.withIncreasedForce(Vec2(-10000, 0));
+//
+//    var agentGeomCenter = Vec2(0, 0);
+//    var count = 0;
+//
+//    val (agentMessages, obstacleMessages) = signalMap.toObjectMessagesSplit match {
+//      case (agents, obstacles) => (agents, obstacles)
+//      case _ => (List.empty[AgentMessage], List.empty[ObstacleMessage])
+//    }
+//
+//    agentMessages.foreach({ case (sig) => {
+//      agentGeomCenter = agentGeomCenter + sig.pos
+//      count += 1;
+//    }})
+//
+//    if(count == 0)
+//      return runner;
+//
+//    agentGeomCenter = agentGeomCenter / count;
+//   // agentGeomCenter = Vec2(835.0,815.0);  // 635.0,515.0
+//    var runnerGlobalPos = runner.globalCellPosition(config) + cell.BaseCoordinates(config);
+//    var dir = agentGeomCenter - runnerGlobalPos;
+//    if(dir.lengthSq == 0)
+//      return runner;
+//    dir = dir.normalized
+//
+//    var swappedDir = Vec2(dir.y, dir.x);
+//    var fixedDir = Vec2(dir.x, -dir.y);
+//    var force = fixedDir*5000.1;
+//    //force = Vec2(0.0,0);
+//    var out = runner.withIncreasedForce(force)
+//    return out;
 
   }
 

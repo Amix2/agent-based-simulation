@@ -33,8 +33,8 @@ object SphForceCalculator {
 
 
     var myDensity: Double = 0;
-    val myPos = runner.globalCellPosition(config) + cell.BaseCoordinates(config);
-    val myVel = runner.velocity;
+    val myPos = runner.globalCellPosition(config) + cell.BaseCoordinates()
+    val myVel = Vec2(runner.velocity.x, - runner.velocity.y) * 0.01;
 
     val obstaclePolygons: List[List[Vec2]] = obstacleMessages.map(msg => msg.ToVec2List);
     val wallPoint = ClosestPointInPolygon.closestPointInPolygons(myPos, obstaclePolygons);
@@ -54,7 +54,8 @@ object SphForceCalculator {
       if(msg.sphData.density > 0) {
         val d2K = kernelSecondDerivative((myPos - msg.pos).length, config.sphConfig.kernelSize*100);
         if (d2K > 0) {
-          myForceViscosity += (myVel - msg.vel) * config.sphConfig.viscosity / (msg.sphData.density * myDensity) * d2K;
+          var otherVel = Vec2(msg.vel.x, - msg.vel.y) * 0.01;
+          myForceViscosity += (myVel - otherVel) * config.sphConfig.viscosity / (msg.sphData.density * myDensity) * d2K;
           val dir = myPos - msg.pos
           myForcePressure += dir *
             (myPressure / (myDensity * myDensity) + msg.sphData.pressure / (msg.sphData.density * msg.sphData.density)) *

@@ -4,9 +4,9 @@ import pl.edu.agh.xinuk.config.{Obstacle, GuiType, XinukConfig}
 import pl.edu.agh.xinuk.model.{Signal, WorldType}
 
 case class SphConfig(targetDensity: Double = 200
-                     , stiffness: Double = 20000
-                     , viscosity: Double = 0
-                     , kernelSize: Double = 1.5)
+                     , stiffness: Double = 50000
+                     , viscosity: Double = 100
+                     , kernelSize: Double = 1.2)
 
 final case class ContinuousEnvConfig(
                                 worldType: WorldType,

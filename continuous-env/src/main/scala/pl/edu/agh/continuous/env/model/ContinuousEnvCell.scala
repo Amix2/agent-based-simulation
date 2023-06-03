@@ -20,6 +20,7 @@ final case class ContinuousEnvCell(initialSignal: Signal, gridMultiCellId: GridM
       signals
     }
 
+  override def getRunnerCount = runners.size;
 
   override def signalFactor(iteration: Long)
                            (implicit config: XinukConfig): Double = {
@@ -32,7 +33,7 @@ final case class ContinuousEnvCell(initialSignal: Signal, gridMultiCellId: GridM
     cellOutline.width * cellOutline.height
 
   private def totalRunnersField: Double = runners.map(_.fakeMass).sum
-  def BaseCoordinates(config: XinukConfig): Vec2 = Vec2(gridMultiCellId.y * cellOutline.width, gridMultiCellId.x * cellOutline.height);
+  def BaseCoordinates(): Vec2 = Vec2(gridMultiCellId.y * cellOutline.width, gridMultiCellId.x * cellOutline.height);
 
   var cellOutline: CellOutline = CellOutline.default()
   var neighbourhood: Neighbourhood = Neighbourhood.empty()

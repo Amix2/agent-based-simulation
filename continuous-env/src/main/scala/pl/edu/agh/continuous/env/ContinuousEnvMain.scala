@@ -9,12 +9,15 @@ import pl.edu.agh.xinuk.model.{AgentMessage, CellState, ObstacleMessage, Signal}
 import pl.edu.agh.xinuk.model.grid.GridSignalPropagation
 
 import java.awt.Color
+import scala.reflect.io.File
 
 object ContinuousEnvMain extends LazyLogging {
   private val configPrefix = "continuous-env"
 
   def main(args: Array[String]): Unit = {
     import pl.edu.agh.xinuk.config.ValueReaders._
+    File("data.txt").writeAll("")
+
     new Simulation(
       configPrefix,
       GeoKinMetrics.MetricHeaders,

@@ -69,7 +69,7 @@ object StepAdjustmentCalculator {
                                           config: ContinuousEnvConfig,
                                           cell: ContinuousEnvCell,
                                           signalMap: SignalMap): Runner = {
-    val myPos = runner.globalCellPosition(config) + cell.BaseCoordinates(config);
+    val myPos = runner.globalCellPosition(config) + cell.BaseCoordinates();
     val nextPos = myPos + runner.nextStep
     val (agentMessages, obstacleMessages) = signalMap.toObjectMessagesSplit match {
       case (agents, obstacles) => (agents, obstacles)

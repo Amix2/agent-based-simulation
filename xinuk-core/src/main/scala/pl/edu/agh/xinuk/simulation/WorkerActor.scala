@@ -9,6 +9,7 @@ import pl.edu.agh.xinuk.gui.GuiActor.GridInfo
 import pl.edu.agh.xinuk.model._
 
 import scala.collection.mutable
+import scala.reflect.io.File
 import scala.util.Random
 
 class WorkerActor[ConfigType <: XinukConfig](
@@ -71,6 +72,14 @@ class WorkerActor[ConfigType <: XinukConfig](
       val start = System.nanoTime()
       currentIteration = iteration
       iterationMetrics = emptyMetrics
+      if(currentIteration%10 == 0)
+      {
+        var runnerCount = 0;
+        worldShard.cells.foreach(cell => {
+          runnerCount += cell._2.state.contents.getRunnerCount
+        })
+        File("data.txt").appendAll(s"$currentIteration;$runnerCount\n") // or appendAll("hello!")
+      }
       val plans: Seq[TargetedPlan] = worldShard.localCellIds.map(worldShard.cells(_)).flatMap(createPlans).toSeq
       distributePlans(currentIteration, plans)
       //Thread.sleep(10);

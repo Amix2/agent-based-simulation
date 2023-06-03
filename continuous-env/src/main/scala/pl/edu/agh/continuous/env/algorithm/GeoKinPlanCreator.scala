@@ -139,13 +139,13 @@ final case class GeoKinPlanCreator() extends PlanCreator[ContinuousEnvConfig] {
         cell,
         neighbourContents,
         config))
-      .map(runner => StepAdjustmentCalculator.adjustNextStepToObstaclesAndRunners( // nextStep
-        runner,
-        neighbourContents,
-        cell,
-        allReachableRunners - runner,
-        config,
-        signalMap))
+//      .map(runner => StepAdjustmentCalculator.adjustNextStepToObstaclesAndRunners( // nextStep
+//        runner,
+//        neighbourContents,
+//        cell,
+//        allReachableRunners - runner,
+//        config,
+//        signalMap))
 //    .map(runner => StepAdjustmentCalculator.limitNextStepToObstacles( // nextStep
 //      runner,
 //      config,
@@ -248,7 +248,20 @@ final case class GeoKinPlanCreator() extends PlanCreator[ContinuousEnvConfig] {
     var v = runner.velocity + a * dt;
     var maxSpeed = runner.maxSpeed;
     if(v.length > maxSpeed)
-      v = v.normalized * maxSpeed;
+    {
+      var velOver = v.length - maxSpeed
+      var neededSlowForce = velOver * runner.trueMass / dt;
+      var possibleSlowForce = runner.legForce
+      if(neededSlowForce < possibleSlowForce)
+        v = v.normalized * maxSpeed;
+      else
+      {
+        var slowAcc = possibleSlowForce / runner.trueMass
+        println(v.length)
+        v += -v.normalized * slowAcc * dt;
+      }
+    }
+
     // s = v * dt;
     var nextStep = v * dt;
 
@@ -359,14 +372,24 @@ final case class GeoKinPlanCreator() extends PlanCreator[ContinuousEnvConfig] {
     }
     getCardinalTargetNeighbour(runnerStep, cell.cardinalSegments)
   }
-
+  def getRandomItem[K, V](map: Map[K, V]): Option[(K, V)] = {
+    val list = map.toList
+    if (list.isEmpty) None
+    else {
+      val randomIndex = scala.util.Random.nextInt(list.length)
+      Some(list(randomIndex))
+    }
+  }
   private def getCardinalTargetNeighbour(runnerStep: Line,
                                          cardinalNeighbourLineMap: Map[Line, GridMultiCellId]): GridMultiCellId = {
-    cardinalNeighbourLineMap
-      .map(neighbourEntry => (neighbourEntry._1.intersect(runnerStep), neighbourEntry._2))
-      .filter(intersectionEntry => intersectionEntry._1.nonEmpty)
-      .filter(intersectionEntry => intersectionEntry._1.get.onLine1 && intersectionEntry._1.get.onLine2)
-      .head._2
+      var target = cardinalNeighbourLineMap
+        .map(neighbourEntry => (neighbourEntry._1.intersect(runnerStep), neighbourEntry._2))
+        .filter(intersectionEntry => intersectionEntry._1.nonEmpty)
+        .filter(intersectionEntry => intersectionEntry._1.get.onLine1 && intersectionEntry._1.get.onLine2)
+
+      if(target.isEmpty)
+          return getRandomItem(cardinalNeighbourLineMap).get._2 // yolo
+      target.head._2
   }
 
   private def getAllReachableRunners(cell: ContinuousEnvCell,

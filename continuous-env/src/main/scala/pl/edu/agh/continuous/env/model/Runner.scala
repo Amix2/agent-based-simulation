@@ -31,7 +31,7 @@ final case class Runner(id: UUID,
 
   def GenerateSignal(currentTime : Double, cell : ContinuousEnvCell)(implicit config: XinukConfig): Signal = {
     Signal(0, Map(id -> AgentMessage.createNew(
-      Vec2(globalCellPosition(config).x + cell.BaseCoordinates(config).x, globalCellPosition(config).y + cell.BaseCoordinates(config).y)
+      Vec2(globalCellPosition(config).x + cell.BaseCoordinates().x, globalCellPosition(config).y + cell.BaseCoordinates().y)
       , velocity
       , trueMass, sphData, radius)));
   }
@@ -53,7 +53,7 @@ final case class Runner(id: UUID,
   def lastActualStep: Option[Vec2] = lastMoveCompletion.map(lmc => nextStep * lmc.value)
   def trueMass: Double = 80 // [kg]
   def maxSpeed: Double = 100 // [cm / s]
-  def legForce: Double = trueMass * maxSpeed * maxSpeed / (2 * 100) * 10// reach maxSpeed in 1m = 100cm
+  def legForce: Double = trueMass * maxSpeed * maxSpeed / (2 * 100) * 100// reach maxSpeed in 1m = 100cm
 
   def completeMove(moveCompletion: MoveCompletion): Runner = Runner(
     id,

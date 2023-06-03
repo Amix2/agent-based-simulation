@@ -9,7 +9,10 @@ import pl.edu.agh.xinuk.model.{AgentMessage, Direction, ObstacleMessage, SignalM
 
 import scala.collection.mutable.ListBuffer
 import java.util.{NoSuchElementException, UUID}
+import scala.reflect.io.File
 import scala.util.control.Breaks.{break, breakable}
+
+
 
 
 //  BASED ON https://gamma.cs.unc.edu/RVO2/downloads/
@@ -80,7 +83,7 @@ object ORCAVelocityCalculator {
       case _ => (List.empty[AgentMessage], List.empty[ObstacleMessage])
     }
 
-    val myPos = (runner.globalCellPosition(config) + cell.BaseCoordinates(config)) * 0.01;
+    val myPos = (runner.globalCellPosition(config) + cell.BaseCoordinates()) * 0.01;
     var myVel = runner.velocity * 0.01;
     myVel = Vec2(myVel.x, -myVel.y);
     val myRad = runner.radius * 0.01
@@ -421,7 +424,6 @@ object ORCAVelocityCalculator {
     //println(myVel, newVel, orcaLines, obstacleSegments)
     newVel *= 100;
     newVel = Vec2(newVel.x, -newVel.y);
-
     return runner.withNextStep(newVel * config.deltaTime, newVel);
 
   }

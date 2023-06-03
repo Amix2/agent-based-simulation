@@ -127,14 +127,14 @@ object ContinuousEnvWorldCreator extends WorldCreator[ContinuousEnvConfig] {
      // RunnerDefinition(535, 655, 10, 23),
     );
 
-    var base : Vec2  = new Vec2(1150, 150);
-    var step : Vec2  = new Vec2(100, 100);
+    var base : Vec2  = new Vec2(1350, 150);
+    var step : Vec2  = new Vec2(100,100);
 
-    for(x <- 0 to 27)
-      for(y <- 0 to 12)
+    for(x <- 0 to 23)
+      for(y <- 0 to 20)
       {
         var pos = base + step * new Vec2(x.doubleValue, y.doubleValue);
-        var rad = scala.util.Random.nextFloat() * 0 + 25;
+        var rad = scala.util.Random.nextFloat() * 0 + 20;
         var speed = scala.util.Random.nextFloat() * 0 + 120;
         runners = runners.appended(new RunnerDefinition(pos.x, pos.y, rad, speed, "R"));
       }
@@ -156,7 +156,7 @@ object ContinuousEnvWorldCreator extends WorldCreator[ContinuousEnvConfig] {
       val gridMultiCellId = finalCellQueue.dequeue()
       val continuousEnvCell: ContinuousEnvCell = worldBuilder(gridMultiCellId).state.contents.asInstanceOf[ContinuousEnvCell]
       var cellSize = config.cellSize
-      var cellBase = continuousEnvCell.BaseCoordinates(config);
+      var cellBase = continuousEnvCell.BaseCoordinates();
       runners.foreach(runner => {
           var runPos = new Vec2(runner.x, runner.y);
           var runInCellPos = runPos - cellBase;

@@ -91,9 +91,9 @@ object Algorithms {
     y = line2StartX + (b * (line2EndY - line2StartY))
     */
     // if line1 is a segment and line2 is infinite, they intersect if:
-    val resultOnLine1 = a > 0 && a < 1
+    val resultOnLine1 = a >= 0 && a <= 1
     // if line2 is a segment and line1 is infinite, they intersect if:
-    val resultOnLine2 = b > 0 && b < 1
+    val resultOnLine2 = b >= 0 && b <= 1
     // if line1 and line2 are segments, they intersect if both of the above are true
     Some(LineIntersection(Vec2(resultX, resultY), resultOnLine1, resultOnLine2))
   }

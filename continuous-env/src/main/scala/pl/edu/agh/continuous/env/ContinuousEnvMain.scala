@@ -48,6 +48,13 @@ object ContinuousEnvMain extends LazyLogging {
     new Color(red.intValue(), green.intValue(), blue.intValue());
   }
 
+  def ToColorVelocity(vel: Double, maxVel: Double): Color = {
+    if(vel <= maxVel)
+      return new Color(0, 0, Math.min((255.0 * vel / maxVel).intValue(), 255));
+    return new Color(Math.min((255.0 * (vel-maxVel) / maxVel * 2).intValue(), 255), 0, 255);
+
+  }
+
 
   private def cellToColorSign(cellState: CellState, continuousEnvCell: ContinuousEnvCell): Color = {
     var x = continuousEnvCell.gridMultiCellId.x
@@ -72,10 +79,19 @@ object ContinuousEnvMain extends LazyLogging {
       count += 1;
     }
     })
-    if (x == 10 && y == 1) {
+
+
+    var maxSpeed = 0.0;
+    var avgSpeed = 0.0;
+    for(agent <- continuousEnvCell.runners)
+    {
+      var speed = agent.velocity.length;
+      maxSpeed = Math.max(speed, maxSpeed);
+      avgSpeed += speed;
     }
-    if (x == 1 && y == 10) {
-    }
+    if(avgSpeed > 0)
+      avgSpeed /= continuousEnvCell.runners.size
+    //return ToColorVelocity(avgSpeed, 100);
     var sum = 3;
     //if (x == 1 && y == 12)
       //return new Color(0, 255, 255);

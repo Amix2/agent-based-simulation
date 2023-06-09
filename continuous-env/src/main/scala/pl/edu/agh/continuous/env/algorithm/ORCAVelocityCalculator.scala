@@ -77,6 +77,7 @@ object ORCAVelocityCalculator {
     val invTimeHorizon = 1.0f / fTimeHorison
     val invTimeHorizonObst = 1.0f / fTimeHorisonObs
     val invTimeStep = 1.0f / config.deltaTime
+    val radMultiplier = 1.01
 
     val (agentMessages, obstacleMessages) = signalMap.toObjectMessagesSplit match {
       case (agents, obstacles) => (agents, obstacles)
@@ -86,7 +87,7 @@ object ORCAVelocityCalculator {
     val myPos = (runner.globalCellPosition(config) + cell.BaseCoordinates()) * 0.01;
     var myVel = runner.velocity * 0.01;
     myVel = Vec2(myVel.x, -myVel.y);
-    val myRad = runner.radius * 0.01
+    val myRad = runner.radius * 0.01 * radMultiplier
 
     val obstaclePolygons = obstacleMessages.map(msg => msg.ToVec2List);
 
@@ -118,10 +119,9 @@ object ORCAVelocityCalculator {
             var otherVel = agent.vel* 0.01;
             otherVel = Vec2(otherVel.x, -otherVel.y);
 
-            val otherRad = agent.radius* 0.01;
-
+            val otherRad = agent.radius * 0.01 * radMultiplier;
             val distSq = (otherPos - myPos).lengthSq;
-            agentsCreator.addOne( OtherAgent(distSq, otherPos, otherVel, otherRad));
+            agentsCreator.addOne(OtherAgent(distSq, otherPos, otherVel, otherRad));
 
           }
 
@@ -417,11 +417,16 @@ object ORCAVelocityCalculator {
     val orcaLines = orcaLinesCreator.toList;
     if(orcaLines.isEmpty)
       return runner;
-    var (lineFail, newVel) = LinearProgram2(orcaLines, runner.maxSpeed*0.01, myVel, false);
+    var maxSpeed = Math.max(runner.maxSpeed*0.01, myVel.length);
+    var (lineFail, newVel) = LinearProgram2(orcaLines, maxSpeed, myVel, false);
     if (lineFail < orcaLines.size) {
-      newVel = LinearProgram3(orcaLines, numObstLines, lineFail, runner.maxSpeed*0.01);
+      newVel = LinearProgram3(orcaLines, numObstLines, lineFail, maxSpeed);
     }
     //println(myVel, newVel, orcaLines, obstacleSegments)
+    if(myVel.length - newVel.length > 0.4)
+      {
+        val t=0;
+      }
     newVel *= 100;
     newVel = Vec2(newVel.x, -newVel.y);
     return runner.withNextStep(newVel * config.deltaTime, newVel);

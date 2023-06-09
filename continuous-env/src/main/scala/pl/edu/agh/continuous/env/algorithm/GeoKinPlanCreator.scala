@@ -106,12 +106,12 @@ final case class GeoKinPlanCreator() extends PlanCreator[ContinuousEnvConfig] {
           cell,
           neighbourContents,
           config))
-//      .map(runner => SignalForceCalculator.adjustVelocityForRunner( // force
-//        runner,
-//        signalMap,
-//        cell,
-//        neighbourContents,
-//        config))
+      .map(runner => SignalForceCalculator.adjustVelocityForRunner( // force
+        runner,
+        signalMap,
+        cell,
+        neighbourContents,
+        config))
       .map(runner => adjustSocialForceForRunner( // force
         runner,
         signalMap,
@@ -139,6 +139,7 @@ final case class GeoKinPlanCreator() extends PlanCreator[ContinuousEnvConfig] {
         cell,
         neighbourContents,
         config))
+      //.map(runner => runner.withNextStep(Vec2(0,0),Vec2(0,0)))
 //      .map(runner => StepAdjustmentCalculator.adjustNextStepToObstaclesAndRunners( // nextStep
 //        runner,
 //        neighbourContents,
@@ -159,13 +160,13 @@ final case class GeoKinPlanCreator() extends PlanCreator[ContinuousEnvConfig] {
 //      .map(runner => applyForceForRunner( // force -> velocity, next step
 //        runner,
 //        config))
-      .map(runner => StepAdjustmentCalculator.adjustNextStepToObstaclesAndRunners(
-        runner,
-        neighbourContents,
-        cell,
-        allReachableRunners - runner,
-        config,
-        signalMap))
+//      .map(runner => StepAdjustmentCalculator.adjustNextStepToObstaclesAndRunners(
+//        runner,
+//        neighbourContents,
+//        cell,
+//        allReachableRunners - runner,
+//        config,
+//        signalMap))
     new Plans(Map.empty, Seq(Plan(StateUpdate(RunnerOccupied(cell.generation + 1, runnersWithAdjustedVelocity)))))
   }
 
@@ -184,7 +185,7 @@ final case class GeoKinPlanCreator() extends PlanCreator[ContinuousEnvConfig] {
                                  neighbourContents: Map[(ContinuousEnvCell, UUID), Direction],
                                  config: ContinuousEnvConfig): Runner = {
     var force = Vec2(0,0);
-    val strength = runner.legForce / 10;
+    val strength = runner.legForce;
     if(runner.tag.contains("R"))
       force += Vec2(0,-strength);
     if (runner.tag.contains("L"))
@@ -257,7 +258,6 @@ final case class GeoKinPlanCreator() extends PlanCreator[ContinuousEnvConfig] {
       else
       {
         var slowAcc = possibleSlowForce / runner.trueMass
-        println(v.length)
         v += -v.normalized * slowAcc * dt;
       }
     }

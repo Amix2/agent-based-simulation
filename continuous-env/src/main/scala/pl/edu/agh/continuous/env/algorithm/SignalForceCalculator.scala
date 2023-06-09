@@ -33,12 +33,12 @@ object SignalForceCalculator {
         val destinationLine = Line(runner.positionInCell, Vec2(runner.positionInCell.x + force.x * config.cellSize * 2.0,
           runner.positionInCell.y + force.y * config.cellSize * 2.0))
         val destination = Helper.adjustDestination(destinationLine, cell, neighbourContents, config.cellSize)
-        if (cell.graph.isEmpty) {
+//        if (cell.graph.isEmpty) {
           runner.path = List(runner.positionInCell, destination)
-        }
-        else {
-          runner.path = Helper.findPath(runner.positionInCell, destination, cell.graph, config.cellSize).toList
-        }
+//        }
+//        else {
+//          runner.path = Helper.findPath(runner.positionInCell, destination, cell.graph, config.cellSize).toList
+//        }
       }
     }
 

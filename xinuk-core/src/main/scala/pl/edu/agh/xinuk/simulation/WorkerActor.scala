@@ -33,6 +33,8 @@ class WorkerActor[ConfigType <: XinukConfig](
   var worldShard: WorldShard = _
   var iterationMetrics: Metrics = _
   var currentIteration: Long = _
+  var startIterationTimeSum = 0.0;
+  var distrbutePlansTimeSum = 0.0;
 
   override def receive: Receive = stopped
 
@@ -72,20 +74,28 @@ class WorkerActor[ConfigType <: XinukConfig](
       val start = System.nanoTime()
       currentIteration = iteration
       iterationMetrics = emptyMetrics
-      if(currentIteration%10 == 0)
+
+      var runnerCount = 0;
+      worldShard.cells.foreach(cell => {
+        runnerCount += cell._2.state.contents.getRunnerCount
+      })
+      if (currentIteration % 10 == 0)
       {
-        var runnerCount = 0;
-        worldShard.cells.foreach(cell => {
-          runnerCount += cell._2.state.contents.getRunnerCount
-        })
-        File("data.txt").appendAll(s"$currentIteration;$runnerCount\n") // or appendAll("hello!")
+        File("data.txt").appendAll(s"$currentIteration;$runnerCount\n")
       }
       val plans: Seq[TargetedPlan] = worldShard.localCellIds.map(worldShard.cells(_)).flatMap(createPlans).toSeq
       distributePlans(currentIteration, plans)
       //Thread.sleep(10);
       val end = System.nanoTime()
-      val elapsed = (end - start) / 1000000 // elapsed time in milliseconds
-      //println(s"$iteration : StartIteration time: $elapsed ms")
+      val elapsed = (end - start) / 1000000.0 // elapsed time in milliseconds
+      startIterationTimeSum += elapsed
+      //File("data.txt").appendAll(s"$currentIteration;$elapsed\n")
+    var time = startIterationTimeSum / currentIteration;
+      if (currentIteration % 1000 == 0) {
+        println(s"runnerCount: $runnerCount")
+        println(s"calculateMove time: $time ms")
+        //File("times.txt").appendAll(s"$runnerCount;$time;")
+      }
 
     case RemotePlans(iteration, remotePlans) =>
       plansStash(iteration) :+= remotePlans
@@ -109,8 +119,16 @@ class WorkerActor[ConfigType <: XinukConfig](
         distributeSignal(currentIteration, signalUpdates)
       }
       val end = System.nanoTime()
-      val elapsed = (end - start) / 1000000 // elapsed time in milliseconds
-      //println(s"$iteration : RemoteConsequences time: $elapsed ms")
+      val elapsed = (end - start) / 1000000.0 // elapsed time in milliseconds
+      distrbutePlansTimeSum += elapsed;
+      var time = distrbutePlansTimeSum / currentIteration;
+
+      if (currentIteration % 1000 == 0)
+        {
+          println(s"distributeSignal time: $time ms")
+          //File("times.txt").appendAll(s"$time\n")
+          //System.exit(0)
+        }
 
     case RemoteSignal(iteration, remoteSignalUpdates) =>
       signalUpdatesStash(iteration) :+= remoteSignalUpdates

@@ -76,12 +76,15 @@ class WorkerActor[ConfigType <: XinukConfig](
       iterationMetrics = emptyMetrics
 
       var runnerCount = 0;
+      var sumVel = Vec2(0,0);
       worldShard.cells.foreach(cell => {
         runnerCount += cell._2.state.contents.getRunnerCount
+        sumVel += cell._2.state.contents.getRunnerSumVelocity;
       })
-      if (currentIteration % 10 == 0)
+      sumVel /= runnerCount;
+      //if (currentIteration % 10 == 0)
       {
-        File("data.txt").appendAll(s"$currentIteration;$runnerCount\n")
+        File("data.txt").appendAll(s"$currentIteration;$runnerCount;${sumVel.length}\n")
       }
       val plans: Seq[TargetedPlan] = worldShard.localCellIds.map(worldShard.cells(_)).flatMap(createPlans).toSeq
       distributePlans(currentIteration, plans)

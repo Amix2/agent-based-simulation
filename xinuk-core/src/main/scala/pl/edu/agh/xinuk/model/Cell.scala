@@ -1,5 +1,6 @@
 package pl.edu.agh.xinuk.model
 
+import pl.edu.agh.xinuk.algorithm.Vec2
 import pl.edu.agh.xinuk.config.XinukConfig
 
 import java.awt.Color
@@ -14,6 +15,7 @@ trait CellContents {
 
   var coordinates: Map[UUID, (Double, Double, Double, Color)] = Map.empty
   def getRunnerCount = 0;
+  def getRunnerSumVelocity : Vec2 = Vec2(0,0);
 }
 
 case object Empty extends CellContents

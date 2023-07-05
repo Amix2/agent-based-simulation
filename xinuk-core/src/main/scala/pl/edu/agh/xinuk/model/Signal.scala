@@ -7,7 +7,7 @@ import pl.edu.agh.xinuk.config.XinukConfig
 import scala.math.sqrt
 
 object AgentMessage {
-  def createNew(pos: Vec2, vel: Vec2, mass: Double, sphData: SphObjectData, radius: Double)  = new AgentMessage(125, pos, vel, mass, sphData, radius)
+  def createNew(pos: Vec2, vel: Vec2, mass: Double, sphData: SphObjectData, radius: Double)  = new AgentMessage(5, pos, vel, mass, sphData, radius)
 }
 
 object ObstacleMessage {

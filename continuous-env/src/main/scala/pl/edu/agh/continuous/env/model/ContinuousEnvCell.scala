@@ -21,6 +21,7 @@ final case class ContinuousEnvCell(initialSignal: Signal, gridMultiCellId: GridM
     }
 
   override def getRunnerCount = runners.size;
+  override def getRunnerSumVelocity: Vec2 = runners.foldLeft(Vec2(0,0))((prev, runner) => prev + runner.velocity);
 
   override def signalFactor(iteration: Long)
                            (implicit config: XinukConfig): Double = {

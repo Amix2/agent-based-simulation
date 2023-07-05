@@ -53,9 +53,14 @@ object ContinuousEnvWorldCreator extends WorldCreator[ContinuousEnvConfig] {
       val gridMultiCellId: GridMultiCellId = cellQueue.dequeue()
       val x = gridMultiCellId.x
       val y = gridMultiCellId.y
-      val continuousEnvCell: ContinuousEnvCell = if (x == 23 && y >=11 && y <=13) {
-        //ContinuousEnvCell(config.initialSignal, gridMultiCellId)
-        ContinuousEnvCell(Signal.zero, gridMultiCellId)
+//      val continuousEnvCell: ContinuousEnvCell = if (x == 23 && y >=11 && y <=13) {
+//        //ContinuousEnvCell(config.initialSignal, gridMultiCellId)
+//        ContinuousEnvCell(Signal.zero, gridMultiCellId)
+//      } else {
+//        ContinuousEnvCell(Signal.zero, gridMultiCellId)
+//      }
+      val continuousEnvCell: ContinuousEnvCell = if (x == 23 && y >= 11 && y <= 13) {
+        ContinuousEnvCell(config.initialSignal, gridMultiCellId)
       } else {
         ContinuousEnvCell(Signal.zero, gridMultiCellId)
       }
@@ -128,42 +133,18 @@ object ContinuousEnvWorldCreator extends WorldCreator[ContinuousEnvConfig] {
      // RunnerDefinition(535, 655, 10, 23),
     );
 
-    var base : Vec2  = new Vec2(270, 2150);
-    var step : Vec2  = new Vec2(100,100);
-    var rad = scala.util.Random.nextFloat() * 0 + 26;
-    var speed = scala.util.Random.nextFloat() * 0 + 120;
+    var base: Vec2 = new Vec2(1350, 150);
+    var step: Vec2 = new Vec2(100, 100);
 
-    for(x <- 0 until  4)
-      for(y <- 0 until 4)
-      {
+    for (x <- 0 to 23)
+      for (y <- 0 to 20) {
         var pos = base + step * new Vec2(x.doubleValue, y.doubleValue);
-        runners = runners.appended(new RunnerDefinition(pos.x, pos.y, rad, speed, "D", Color.red));
+        var rad = scala.util.Random.nextFloat() * 0 + 20;
+        var speed = scala.util.Random.nextFloat() * 0 + 120;
+        runners = runners.appended(new RunnerDefinition(pos.x, pos.y, rad, speed, "R"));
       }
 
-    var base2: Vec2 = new Vec2(2120, 250);
 
-    for (x <- 0 until 4)
-      for (y <- 0 until 4) {
-        var pos = base2 + step * new Vec2(x.doubleValue, y.doubleValue);
-        runners = runners.appended(new RunnerDefinition(pos.x, pos.y, rad, speed, "R", Color.green));
-      }
-
-    var base3: Vec2 = Vec2(4770, 2450);
-
-    for (x <- 0 until 2)
-      for (y <- 0 until 2)
-      {
-        var pos = base3 + step * new Vec2(-x.doubleValue, y.doubleValue);
-        //runners = runners.appended(new RunnerDefinition(pos.x, pos.y, rad, speed, "U", Color.blue));
-      }
-
-    var base4: Vec2 = new Vec2(2450, 4750);
-
-    for (x <- 0 until 2)
-      for (y <- 0 until 2) {
-        var pos = base4 + step * new Vec2(x.doubleValue, -y.doubleValue);
-        //runners = runners.appended(new RunnerDefinition(pos.x, pos.y, rad, speed, "L", Color.magenta));
-      }
 
 
 //    for(x <- 0 to 10)
